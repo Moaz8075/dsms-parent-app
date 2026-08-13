@@ -1,0 +1,47 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://backend.dsmspk.com",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyAF-_VazXbLydvgRdAbVdVYNwP_ihoTKoQ",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "school-system-8e581.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "school-system-8e581",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "school-system-8e581.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "450791914459",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:450791914459:web:65f6db2aba2b909bc505fe"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://backend.dsmspk.com",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyAF-_VazXbLydvgRdAbVdVYNwP_ihoTKoQ",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "school-system-8e581.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "school-system-8e581",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "school-system-8e581.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "450791914459",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:450791914459:web:65f6db2aba2b909bc505fe"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
