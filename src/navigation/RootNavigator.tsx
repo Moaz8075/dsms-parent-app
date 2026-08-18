@@ -1,6 +1,7 @@
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useEffect, useRef } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +22,9 @@ import { AttendanceScreen } from '../screens/AttendanceScreen';
 import { ReportCardScreen } from '../screens/ReportCardScreen';
 import { TestsScreen, ExamsScreen } from '../screens/AssessmentListScreen';
 import { ExamDetailScreen } from '../screens/ExamDetailScreen';
+import { TeacherNavigator } from './TeacherNavigator';
+import { navigationRef, navigateFromPush } from './navigationRef';
+import { subscribeToNotificationResponse } from '../notifications/push';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -74,7 +78,17 @@ function Tabs() {
 }
 
 export function RootNavigator() {
-  const { ready, isAuthenticated, needsOnboarding } = useAuth();
+  const { ready, isAuthenticated, needsOnboarding, isTeacher } = useAuth();
+  const handledResponse = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!ready || !isAuthenticated) return;
+    return subscribeToNotificationResponse((payload, id) => {
+      if (handledResponse.current === id) return;
+      handledResponse.current = id;
+      navigateFromPush(payload, isTeacher);
+    });
+  }, [ready, isAuthenticated, isTeacher]);
 
   if (!ready) {
     return (
@@ -85,13 +99,15 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer ref={navigationRef} theme={navTheme}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
           </>
+        ) : isTeacher ? (
+          <Stack.Screen name="Teacher" component={TeacherNavigator} />
         ) : needsOnboarding ? (
           <>
             <Stack.Screen name="Onboarding" component={OnboardingScreen} />

@@ -33,7 +33,7 @@ export function ScreenHeader({ title, subtitle, onBack, right }: Props) {
             </Text>
           ) : null}
         </View>
-        <View style={styles.right}>{right}</View>
+        <View style={[styles.right, !right && styles.iconBtn]}>{right}</View>
       </View>
     </View>
   );
@@ -56,5 +56,5 @@ const styles = StyleSheet.create({
   titles: { flex: 1, alignItems: 'center' },
   title: { color: colors.white, fontSize: 18, fontWeight: '800' },
   subtitle: { color: 'rgba(255,255,255,0.75)', fontSize: 12, marginTop: 2 },
-  right: { width: 36, alignItems: 'flex-end' },
+  right: { minWidth: 36, alignItems: 'flex-end' },
 });

@@ -34,6 +34,11 @@ yarn-error.*
 .env
 .env*.local
 
+# FCM / Firebase private keys (upload to EAS, do not commit)
+fcm-service-account.json
+*-firebase-adminsdk-*.json
+google-servoce-private-key.json
+
 # typescript
 *.tsbuildinfo
 

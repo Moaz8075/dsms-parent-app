@@ -53,6 +53,7 @@ export async function apiFetch<T = any>(
   const token = auth?.token;
   const subdomain =
     options.subdomain ??
+    auth?.school?.subdomain ??
     auth?.children?.find((child: { childId: string }) => child.childId === auth.activeChildId)
       ?.subdomain ??
     auth?.children?.[0]?.subdomain ??

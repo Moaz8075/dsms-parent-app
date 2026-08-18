@@ -173,13 +173,16 @@ export function ChatListScreen({ navigation }: any) {
 }
 
 export function ChatThreadScreen({ navigation, route }: any) {
-  const { user } = useAuth();
-  const { conversationId, schoolId, name } = route.params;
+  const { user, school, activeChild } = useAuth();
+  const conversationId = route.params?.conversationId;
+  const schoolId = route.params?.schoolId || school?.id || activeChild?.schoolId;
+  const name = route.params?.name || 'Chat';
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
+    if (!conversationId || !schoolId) return;
     let unsub: (() => void) | undefined;
     ensureFirebaseAuth().then(() => {
       const msgRef = collection(db, 'schools', schoolId, 'conversations', conversationId, 'messages');
@@ -193,7 +196,7 @@ export function ChatThreadScreen({ navigation, route }: any) {
 
   const send = async () => {
     const trimmed = text.trim();
-    if (!trimmed || !user) return;
+    if (!trimmed || !user || !schoolId || !conversationId) return;
     setSending(true);
     setText('');
     try {

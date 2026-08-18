@@ -1,7 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import type { AuthSession, AuthUser, ParentChild } from '../types';
+import type { AuthSchool, AuthSession, AuthUser, ParentChild } from '../types';
 import { getStoredAuth, setStoredAuth } from '../api/client';
-import { parentLogin } from '../api/auth';
+import { parentLogin, teacherLogin } from '../api/auth';
+import { registerPushNotifications, unregisterPushNotifications } from '../notifications/push';
+
+export type LoginRole = 'parent' | 'teacher';
 
 type AuthContextValue = {
   ready: boolean;
@@ -10,9 +13,11 @@ type AuthContextValue = {
   children: ParentChild[];
   activeChild: ParentChild | null;
   activeChildId: string | null;
+  school: AuthSchool | null;
   isAuthenticated: boolean;
+  isTeacher: boolean;
   needsOnboarding: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, options?: { role?: LoginRole; subdomain?: string }) => Promise<void>;
   logout: () => Promise<void>;
   setActiveChild: (childId: string) => void;
   updateUser: (patch: Partial<AuthUser>) => void;
@@ -21,13 +26,18 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function teacherFrom(session: AuthSession | null) {
+  return session?.user?.userType === 'TEACHER' || session?.role?.code === 'TEACHER';
+}
+
 function buildSession(data: {
   token: string;
   user: AuthUser;
   role: AuthSession['role'];
   permissions: string[];
-  children: ParentChild[];
+  children?: ParentChild[];
   activeChildId?: string | null;
+  school?: AuthSchool | null;
 }): AuthSession {
   const children = data.children ?? [];
   return {
@@ -37,6 +47,7 @@ function buildSession(data: {
     permissions: data.permissions ?? [],
     children,
     activeChildId: data.activeChildId ?? children[0]?.childId ?? null,
+    school: data.school ?? null,
   };
 }
 
@@ -47,7 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     getStoredAuth()
       .then((stored) => {
-        if (stored?.token && stored?.user) setSession(stored);
+        if (stored?.token && stored?.user) {
+          setSession({
+            ...stored,
+            children: stored.children ?? [],
+            school: stored.school ?? null,
+          });
+        }
       })
       .finally(() => setReady(true));
   }, []);
@@ -57,12 +74,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void setStoredAuth(next);
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const data = await parentLogin(email.trim().toLowerCase(), password);
-    persist(buildSession(data));
-  }, [persist]);
+  useEffect(() => {
+    if (!session?.token) return;
+    registerPushNotifications().catch(() => {});
+  }, [session?.token, session?.user?.id]);
+
+  const login = useCallback(
+    async (email: string, password: string, options?: { role?: LoginRole; subdomain?: string }) => {
+      const role = options?.role ?? 'parent';
+      if (role === 'teacher') {
+        const subdomain = options?.subdomain?.trim();
+        if (!subdomain) throw new Error('Enter your school code to continue.');
+        const data = await teacherLogin(email.trim().toLowerCase(), password, subdomain);
+        persist(buildSession(data));
+        return;
+      }
+      const data = await parentLogin(email.trim().toLowerCase(), password);
+      persist(buildSession(data));
+    },
+    [persist],
+  );
 
   const logout = useCallback(async () => {
+    await unregisterPushNotifications();
     persist(null);
   }, [persist]);
 
@@ -105,6 +139,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
   }, [session]);
 
+  const isTeacher = teacherFrom(session);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       ready,
@@ -113,15 +149,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       children: session?.children ?? [],
       activeChild,
       activeChildId: activeChild?.childId ?? null,
+      school: session?.school ?? null,
       isAuthenticated: Boolean(session?.token),
-      needsOnboarding: Boolean(session?.token && !session.user?.onboardingCompletedAt),
+      isTeacher,
+      needsOnboarding: Boolean(session?.token && !isTeacher && !session.user?.onboardingCompletedAt),
       login,
       logout,
       setActiveChild,
       updateUser,
       syncChildren,
     }),
-    [ready, session, activeChild, login, logout, setActiveChild, updateUser, syncChildren],
+    [ready, session, activeChild, isTeacher, login, logout, setActiveChild, updateUser, syncChildren],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -46,6 +46,24 @@ export function isoDate(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+export function isoMonth(date = new Date()) {
+  return isoDate(date).slice(0, 7);
+}
+
+export function shiftMonth(yearMonth: string, delta: number) {
+  const [year, month] = yearMonth.split('-').map(Number);
+  const next = new Date(year, (month || 1) - 1 + delta, 1);
+  return isoMonth(next);
+}
+
+export function formatMonth(yearMonth?: string | null) {
+  if (!yearMonth) return '';
+  const [year, month] = yearMonth.split('-').map(Number);
+  const date = new Date(year, (month || 1) - 1, 1);
+  if (Number.isNaN(date.getTime())) return yearMonth;
+  return date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+}
+
 export function addDays(iso: string, days: number) {
   const date = new Date(`${iso}T00:00:00`);
   date.setDate(date.getDate() + days);

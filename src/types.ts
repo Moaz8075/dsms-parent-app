@@ -25,6 +25,12 @@ export type AuthUser = {
   onboardingCompletedAt?: string | null;
 };
 
+export type AuthSchool = {
+  id: string;
+  name: string;
+  subdomain: string;
+};
+
 export type AuthSession = {
   token: string;
   user: AuthUser;
@@ -32,6 +38,7 @@ export type AuthSession = {
   permissions: string[];
   children: ParentChild[];
   activeChildId: string | null;
+  school: AuthSchool | null;
 };
 
 export type DiaryItem = {

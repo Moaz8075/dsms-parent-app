@@ -8,16 +8,18 @@ type Props = TextInputProps & {
   error?: string;
 };
 
-export function Field({ label, icon, error, ...props }: Props) {
+export function Field({ label, icon, error, multiline, style, ...props }: Props) {
   return (
     <View style={styles.wrap}>
       <Text style={styles.label}>{label}</Text>
-      <View style={[styles.inputWrap, error && styles.inputError]}>
-        {icon ? <Ionicons name={icon} size={18} color={colors.textMuted} /> : null}
+      <View style={[styles.inputWrap, multiline && styles.inputMultiline, error && styles.inputError]}>
+        {icon && !multiline ? <Ionicons name={icon} size={18} color={colors.textMuted} /> : null}
         <TextInput
           placeholderTextColor={colors.textMuted}
-          style={styles.input}
+          style={[styles.input, multiline && styles.multilineInput, style]}
           autoCapitalize="none"
+          multiline={multiline}
+          textAlignVertical={multiline ? 'top' : 'center'}
           {...props}
         />
       </View>
@@ -45,7 +47,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
+  inputMultiline: { alignItems: 'flex-start', minHeight: 110, paddingVertical: 8 },
   inputError: { borderColor: colors.danger },
   input: { flex: 1, minWidth: 0, color: colors.text, fontSize: 16, paddingVertical: 12 },
+  multilineInput: { minHeight: 90, paddingVertical: 8 },
   error: { color: colors.danger, marginTop: 6, fontSize: 12 },
 });

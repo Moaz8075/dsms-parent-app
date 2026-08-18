@@ -27,9 +27,9 @@ export function Badge({
 
 export function statusTone(status?: string) {
   const value = (status || '').toUpperCase();
-  if (['PAID', 'APPROVED', 'PRESENT', 'COMPLETED', 'SUBMITTED'].includes(value)) return 'success' as const;
-  if (['PENDING', 'PARTIAL', 'LATE', 'PROCESSING', 'UNPAID'].includes(value)) return 'warning' as const;
-  if (['OVERDUE', 'REJECTED', 'ABSENT', 'FAILED', 'CANCELLED'].includes(value)) return 'danger' as const;
+  if (['PAID', 'APPROVED', 'PRESENT', 'COMPLETED', 'SUBMITTED', 'PUBLISHED', 'ACTIVE', 'ON TIME'].includes(value)) return 'success' as const;
+  if (['PENDING', 'PARTIAL', 'LATE', 'PROCESSING', 'UNPAID', 'DRAFT', 'IN_PROGRESS', 'GRADING', 'EXCUSED', 'HALF_DAY'].includes(value)) return 'warning' as const;
+  if (['OVERDUE', 'REJECTED', 'ABSENT', 'FAILED', 'CANCELLED', 'AT RISK', 'URGENT'].includes(value)) return 'danger' as const;
   return 'info' as const;
 }
 
