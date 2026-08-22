@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { collection, getDocs, limit, query, where } from 'firebase/firestore';
+import { collection, limit, onSnapshot, query, where } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import { useTeacherContacts } from '../../hooks/useTeacherQueries';
 import { createConversation, db, ensureFirebaseAuth } from '../../api/firebase';
@@ -22,37 +22,47 @@ export function TeacherChatListScreen({ navigation }: any) {
   const schoolId = school?.id;
 
   useEffect(() => {
+    if (!user?.id || !schoolId) {
+      setLoading(false);
+      return;
+    }
+    let unsub: (() => void) | undefined;
     let cancelled = false;
-    async function load() {
-      if (!user?.id || !schoolId) {
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setError('');
-      try {
-        await ensureFirebaseAuth();
+    setLoading(true);
+    setError('');
+    ensureFirebaseAuth(user.id)
+      .then(() => {
+        if (cancelled) return;
         const ref = collection(db, 'schools', schoolId, 'conversations');
         const q = query(ref, where('participants', 'array-contains', user.id), limit(50));
-        const snap = await getDocs(q);
-        if (cancelled) return;
-        const rows = snap.docs
-          .map((d) => ({ id: d.id, schoolId, ...d.data() }))
-          .sort((a: any, b: any) => {
-            const ta = a.updatedAt?.toDate ? a.updatedAt.toDate().getTime() : 0;
-            const tb = b.updatedAt?.toDate ? b.updatedAt.toDate().getTime() : 0;
-            return tb - ta;
-          });
-        setConversations(rows);
-      } catch (err: any) {
-        if (!cancelled) setError(err?.message || 'Unable to load messages.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
+        unsub = onSnapshot(
+          q,
+          (snap) => {
+            const rows = snap.docs
+              .map((d) => ({ id: d.id, schoolId, ...d.data() }))
+              .sort((a: any, b: any) => {
+                const ta = a.updatedAt?.toDate ? a.updatedAt.toDate().getTime() : 0;
+                const tb = b.updatedAt?.toDate ? b.updatedAt.toDate().getTime() : 0;
+                return tb - ta;
+              });
+            setConversations(rows);
+            setLoading(false);
+          },
+          (err) => {
+            setError(err.message || 'Unable to load messages.');
+            setLoading(false);
+          },
+        );
+      })
+      .catch((err: any) => {
+        if (!cancelled) {
+          setError(err?.message || 'Unable to load messages.');
+          setLoading(false);
+        }
+      });
     return () => {
       cancelled = true;
+      unsub?.();
     };
   }, [user?.id, schoolId]);
 

@@ -39,8 +39,16 @@ export function navigateFromPush(payload: PushPayload, isTeacher: boolean) {
       navigationRef.navigate('Teacher' as never, { screen: 'TeacherTabs', params: { screen: 'TeacherAttendanceTab' } } as never);
       return;
     }
-    if (type === 'MARKS_PUBLISHED') {
+    if (type === 'MARKS_PUBLISHED' || type === 'TEST_CREATED') {
       navigationRef.navigate('Teacher' as never, { screen: 'TeacherTests' } as never);
+      return;
+    }
+    if (type === 'DIARY') {
+      navigationRef.navigate('Teacher' as never, { screen: 'TeacherDiary' } as never);
+      return;
+    }
+    if (type === 'LEAVE_SUBMITTED' || type === 'LEAVE_REVIEWED') {
+      navigationRef.navigate('Teacher' as never, { screen: 'TeacherTabs', params: { screen: 'TeacherHomeTab' } } as never);
       return;
     }
     navigationRef.navigate('Teacher' as never, { screen: 'TeacherTabs', params: { screen: 'TeacherHomeTab' } } as never);
@@ -55,6 +63,10 @@ export function navigateFromPush(payload: PushPayload, isTeacher: boolean) {
     navigationRef.navigate('Leave' as never);
     return;
   }
+  if (type === 'DIARY') {
+    navigationRef.navigate('Tabs' as never, { screen: 'DiaryTab' } as never);
+    return;
+  }
   if (type === 'PAYMENT_RECEIPT') {
     navigationRef.navigate('Fees' as never);
     return;
@@ -63,7 +75,7 @@ export function navigateFromPush(payload: PushPayload, isTeacher: boolean) {
     navigationRef.navigate('Attendance' as never);
     return;
   }
-  if (type === 'MARKS_PUBLISHED') {
+  if (type === 'MARKS_PUBLISHED' || type === 'TEST_CREATED') {
     navigationRef.navigate('Tests' as never);
   }
 }

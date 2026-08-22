@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Card } from '../components/Card';
 import { Badge, statusTone } from '../components/Badge';
 import { Field } from '../components/Field';
+import { KeyboardScreen } from '../components/KeyboardScreen';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { EmptyState, ErrorState, LoadingState } from '../components/States';
 import { useAuth } from '../context/AuthContext';
@@ -43,12 +44,16 @@ export function LeaveScreen({ navigation }: any) {
 
   return (
     <View style={styles.root}>
-      <ScreenHeader
-        title="Leave Requests"
-        subtitle={activeChild ? `${activeChild.name} · ${activeChild.grade}` : undefined}
-        onBack={() => navigation.goBack()}
-      />
-      <ScrollView contentContainerStyle={styles.body}>
+      <KeyboardScreen
+        header={
+          <ScreenHeader
+            title="Leave Requests"
+            subtitle={activeChild ? `${activeChild.name} · ${activeChild.grade}` : undefined}
+            onBack={() => navigation.goBack()}
+          />
+        }
+        contentContainerStyle={styles.body}
+      >
         <Card>
           <Text style={styles.label}>Selected range</Text>
           <Text style={styles.range}>
@@ -100,7 +105,7 @@ export function LeaveScreen({ navigation }: any) {
             </Card>
           ))
         )}
-      </ScrollView>
+      </KeyboardScreen>
     </View>
   );
 }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { ScreenHeader } from '../../components/ScreenHeader';
 import { Card } from '../../components/Card';
 import { Field } from '../../components/Field';
+import { KeyboardScreen } from '../../components/KeyboardScreen';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { useCreateTeacherDiary, useTeacherDiary } from '../../hooks/useTeacherQueries';
 import { colors, radius } from '../../theme';
@@ -45,9 +46,10 @@ export function TeacherDiaryComposeScreen({ navigation }: any) {
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title="New diary entry" onBack={() => navigation.goBack()} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <KeyboardScreen
+        header={<ScreenHeader title="New diary entry" onBack={() => navigation.goBack()} />}
+        contentContainerStyle={styles.body}
+      >
           <Card>
             <Text style={styles.label}>Class</Text>
             <View style={styles.wrapPills}>
@@ -82,15 +84,14 @@ export function TeacherDiaryComposeScreen({ navigation }: any) {
             />
             <PrimaryButton title="Publish to parents" loading={create.isPending} onPress={save} />
           </Card>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardScreen>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  body: { padding: 16, paddingBottom: 40 },
+  body: { padding: 16 },
   label: { color: colors.text, fontWeight: '600', marginBottom: 8, fontSize: 14 },
   wrapPills: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
   pill: {

@@ -1,17 +1,10 @@
 import { useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Card } from '../components/Card';
 import { Field } from '../components/Field';
+import { KeyboardScreen } from '../components/KeyboardScreen';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { useAuth } from '../context/AuthContext';
 import { useUpdateParentProfile } from '../hooks/useParentQueries';
@@ -41,16 +34,10 @@ export function ProfileScreen({ navigation }: any) {
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title="My Profile" onBack={() => navigation.goBack()} />
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      <KeyboardScreen
+        header={<ScreenHeader title="My Profile" onBack={() => navigation.goBack()} />}
+        contentContainerStyle={styles.body}
       >
-        <ScrollView
-          contentContainerStyle={styles.body}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
           <View style={styles.hero}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{initials(`${firstName} ${lastName}`)}</Text>
@@ -125,8 +112,7 @@ export function ProfileScreen({ navigation }: any) {
               ))
             )}
           </Card>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardScreen>
     </View>
   );
 }

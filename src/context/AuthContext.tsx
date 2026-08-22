@@ -3,6 +3,7 @@ import type { AuthSchool, AuthSession, AuthUser, ParentChild } from '../types';
 import { getStoredAuth, setStoredAuth } from '../api/client';
 import { parentLogin, teacherLogin } from '../api/auth';
 import { registerPushNotifications, unregisterPushNotifications } from '../notifications/push';
+import { signOutFirebase } from '../api/firebase';
 
 export type LoginRole = 'parent' | 'teacher';
 
@@ -97,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     await unregisterPushNotifications();
+    await signOutFirebase();
     persist(null);
   }, [persist]);
 

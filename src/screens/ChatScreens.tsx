@@ -16,12 +16,11 @@ import {
   addDoc,
   collection,
   doc,
-  getDocs,
   limit,
   onSnapshot,
   orderBy,
   query,
-  serverTimestamp,
+  Timestamp,
   updateDoc,
   where,
 } from 'firebase/firestore';
@@ -38,6 +37,7 @@ import { Card } from '../components/Card';
 import { EmptyState, ErrorState, LoadingState } from '../components/States';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { colors, radius } from '../theme';
+import { usePushStatus } from '../notifications/push';
 import { relativeTime } from '../utils/format';
 
 export function ChatListScreen({ navigation }: any) {
@@ -51,37 +51,47 @@ export function ChatListScreen({ navigation }: any) {
   const schoolId = activeChild?.schoolId;
 
   useEffect(() => {
+    if (!user?.id || !schoolId) {
+      setLoading(false);
+      return;
+    }
+    let unsub: (() => void) | undefined;
     let cancelled = false;
-    async function load() {
-      if (!user?.id || !schoolId) {
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setError('');
-      try {
-        await ensureFirebaseAuth();
+    setLoading(true);
+    setError('');
+    ensureFirebaseAuth(user.id)
+      .then(() => {
+        if (cancelled) return;
         const ref = collection(db, 'schools', schoolId, 'conversations');
         const q = query(ref, where('participants', 'array-contains', user.id), limit(50));
-        const snap = await getDocs(q);
-        if (cancelled) return;
-        const rows = snap.docs
-          .map((d) => ({ id: d.id, schoolId, ...d.data() }))
-          .sort((a: any, b: any) => {
-            const ta = a.updatedAt?.toDate ? a.updatedAt.toDate().getTime() : 0;
-            const tb = b.updatedAt?.toDate ? b.updatedAt.toDate().getTime() : 0;
-            return tb - ta;
-          });
-        setConversations(rows);
-      } catch (err: any) {
-        if (!cancelled) setError(err?.message || 'Unable to load messages.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
+        unsub = onSnapshot(
+          q,
+          (snap) => {
+            const rows = snap.docs
+              .map((d) => ({ id: d.id, schoolId, ...d.data() }))
+              .sort((a: any, b: any) => {
+                const ta = a.updatedAt?.toDate ? a.updatedAt.toDate().getTime() : 0;
+                const tb = b.updatedAt?.toDate ? b.updatedAt.toDate().getTime() : 0;
+                return tb - ta;
+              });
+            setConversations(rows);
+            setLoading(false);
+          },
+          (err) => {
+            setError(err.message || 'Unable to load messages.');
+            setLoading(false);
+          },
+        );
+      })
+      .catch((err: any) => {
+        if (!cancelled) {
+          setError(err?.message || 'Unable to load messages.');
+          setLoading(false);
+        }
+      });
     return () => {
       cancelled = true;
+      unsub?.();
     };
   }, [user?.id, schoolId]);
 
@@ -173,7 +183,9 @@ export function ChatListScreen({ navigation }: any) {
 }
 
 export function ChatThreadScreen({ navigation, route }: any) {
+  const insets = useSafeAreaInsets();
   const { user, school, activeChild } = useAuth();
+  const pushStatus = usePushStatus();
   const conversationId = route.params?.conversationId;
   const schoolId = route.params?.schoolId || school?.id || activeChild?.schoolId;
   const name = route.params?.name || 'Chat';
@@ -182,40 +194,77 @@ export function ChatThreadScreen({ navigation, route }: any) {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    if (!conversationId || !schoolId) return;
+    if (!conversationId || !schoolId || !user?.id) return;
     let unsub: (() => void) | undefined;
-    ensureFirebaseAuth().then(() => {
+    let cancelled = false;
+    ensureFirebaseAuth(user.id).then(() => {
+      if (cancelled) return;
       const msgRef = collection(db, 'schools', schoolId, 'conversations', conversationId, 'messages');
       const q = query(msgRef, orderBy('sentAt', 'desc'), limit(40));
-      unsub = onSnapshot(q, (snap) => {
-        setMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() })).reverse());
-      });
+      unsub = onSnapshot(
+        q,
+        (snap) => {
+          const incoming = snap.docs.map((d) => ({ id: d.id, ...d.data() })).reverse();
+          setMessages((prev) => {
+            const locals = prev.filter(
+              (item) =>
+                String(item.id).startsWith('local-') &&
+                !incoming.some((msg) => msg.senderId === item.senderId && msg.content === item.content),
+            );
+            return [...incoming, ...locals];
+          });
+        },
+        () => {},
+      );
     });
-    return () => unsub?.();
-  }, [conversationId, schoolId]);
+    return () => {
+      cancelled = true;
+      unsub?.();
+    };
+  }, [conversationId, schoolId, user?.id]);
 
   const send = async () => {
     const trimmed = text.trim();
     if (!trimmed || !user || !schoolId || !conversationId) return;
     setSending(true);
     setText('');
+    const localId = `local-${Date.now()}`;
+    const sentAt = Timestamp.now();
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: localId,
+        senderId: user.id,
+        senderName: `${user.firstName} ${user.lastName}`,
+        content: trimmed,
+        sentAt,
+      },
+    ]);
     try {
+      await ensureFirebaseAuth(user.id);
       const msgRef = collection(db, 'schools', schoolId, 'conversations', conversationId, 'messages');
       await addDoc(msgRef, {
         senderId: user.id,
         senderName: `${user.firstName} ${user.lastName}`,
         content: trimmed,
-        sentAt: serverTimestamp(),
+        sentAt,
         readBy: [user.id],
       });
       updateDoc(doc(db, 'schools', schoolId, 'conversations', conversationId), {
-        lastMessage: { content: trimmed, senderId: user.id, senderName: `${user.firstName} ${user.lastName}` },
-        updatedAt: serverTimestamp(),
+        lastMessage: {
+          content: trimmed,
+          senderId: user.id,
+          senderName: `${user.firstName} ${user.lastName}`,
+          sentAt: sentAt.toDate(),
+        },
+        updatedAt: sentAt,
       }).catch(() => {});
       notifyConversation(conversationId, {
         content: trimmed,
         senderName: `${user.firstName} ${user.lastName}`,
       }).catch(() => {});
+    } catch {
+      setMessages((prev) => prev.filter((item) => item.id !== localId));
     } finally {
       setSending(false);
     }
@@ -224,7 +273,7 @@ export function ChatThreadScreen({ navigation, route }: any) {
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={0}
     >
       <ScreenHeader title={name} onBack={() => navigation.goBack()} />
@@ -232,6 +281,8 @@ export function ChatThreadScreen({ navigation, route }: any) {
         data={messages}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.thread}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         renderItem={({ item }) => {
           const mine = item.senderId === user?.id;
           return (
@@ -241,16 +292,28 @@ export function ChatThreadScreen({ navigation, route }: any) {
           );
         }}
       />
-      <View style={styles.composer}>
-        <TextInput
-          value={text}
-          onChangeText={setText}
-          placeholder="Type a message"
-          style={styles.input}
-        />
-        <Pressable onPress={send} style={styles.send} disabled={sending}>
-          {sending ? <ActivityIndicator color={colors.white} /> : <Ionicons name="send" size={18} color={colors.white} />}
-        </Pressable>
+      <View style={[styles.composerWrap, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+        {pushStatus.lastNotify !== 'idle' ? (
+          <Text
+            style={[
+              styles.notifyHint,
+              pushStatus.lastNotify === 'failed' && styles.notifyFail,
+            ]}
+          >
+            {pushStatus.lastNotify === 'ok' ? 'Push notify sent' : `Push notify failed: ${pushStatus.lastNotifyDetail}`}
+          </Text>
+        ) : null}
+        <View style={styles.composer}>
+          <TextInput
+            value={text}
+            onChangeText={setText}
+            placeholder="Type a message"
+            style={styles.input}
+          />
+          <Pressable onPress={send} style={styles.send} disabled={sending}>
+            {sending ? <ActivityIndicator color={colors.white} /> : <Ionicons name="send" size={18} color={colors.white} />}
+          </Pressable>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -293,6 +356,19 @@ const styles = StyleSheet.create({
   mine: { alignSelf: 'flex-end', backgroundColor: colors.primary },
   theirs: { alignSelf: 'flex-start', backgroundColor: colors.white },
   bubbleText: { color: colors.text, lineHeight: 20 },
+  composerWrap: {
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  notifyHint: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    color: colors.success,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  notifyFail: { color: colors.danger },
   composer: {
     flexDirection: 'row',
     padding: 12,

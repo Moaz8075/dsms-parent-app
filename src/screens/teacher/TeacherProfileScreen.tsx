@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '../../components/ScreenHeader';
 import { Card } from '../../components/Card';
 import { Field } from '../../components/Field';
+import { KeyboardScreen } from '../../components/KeyboardScreen';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { useAuth } from '../../context/AuthContext';
 import { useUpdateTeacherProfile } from '../../hooks/useTeacherQueries';
@@ -33,9 +34,10 @@ export function TeacherProfileScreen({ navigation }: any) {
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title="My Profile" onBack={() => navigation.goBack()} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <KeyboardScreen
+        header={<ScreenHeader title="My Profile" onBack={() => navigation.goBack()} />}
+        contentContainerStyle={styles.body}
+      >
           <View style={styles.hero}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{initials(`${firstName} ${lastName}`)}</Text>
@@ -67,8 +69,7 @@ export function TeacherProfileScreen({ navigation }: any) {
             />
             <PrimaryButton title="Save changes" loading={mutation.isPending} onPress={save} />
           </Card>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardScreen>
     </View>
   );
 }

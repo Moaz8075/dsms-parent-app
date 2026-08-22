@@ -63,8 +63,13 @@ export function TeacherMarksheetScreen({ navigation, route }: any) {
         subtitle={header ? `${header.classLabel} · ${header.subject}` : undefined}
         onBack={() => navigation.goBack()}
       />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={[styles.body, { paddingBottom: 100 + insets.bottom }]}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView
+          contentContainerStyle={[styles.body, { paddingBottom: 100 + insets.bottom }]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+        >
           {isLoading ? <LoadingState /> : null}
           {isError ? <ErrorState message={(error as Error)?.message} onRetry={() => refetch()} /> : null}
           {header ? (
@@ -153,9 +158,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
     backgroundColor: colors.white,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: 1,
     borderTopColor: colors.border,
+    elevation: 10,
+    shadowColor: '#1A2B6D',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
   },
 });

@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import {
   Image,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -12,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth, type LoginRole } from '../context/AuthContext';
 import { Field } from '../components/Field';
+import { KeyboardScreen } from '../components/KeyboardScreen';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { colors, radius } from '../theme';
 
@@ -50,8 +48,7 @@ export function LoginScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardScreen contentContainerStyle={styles.content}>
           <Image source={require('../../assets/dsms-mark.png')} style={styles.logo} resizeMode="contain" />
           <Text style={styles.brand}>DSMS</Text>
           <Text style={styles.subtitle}>
@@ -118,8 +115,7 @@ export function LoginScreen({ navigation }: any) {
           </Pressable>
 
           <PrimaryButton title="Login" onPress={onSubmit} loading={loading} icon="arrow-forward" />
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardScreen>
     </SafeAreaView>
   );
 }

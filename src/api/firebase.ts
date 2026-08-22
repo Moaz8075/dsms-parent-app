@@ -4,10 +4,12 @@ import {
   initializeAuth,
   getReactNativePersistence,
   signInWithCustomToken,
+  signOut,
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import { apiFetch } from './client';
+import { recordNotifyResult } from '../notifications/push';
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -36,7 +38,15 @@ export const db = getFirestore(app);
 
 let authPromise: Promise<unknown> | null = null;
 
-export async function ensureFirebaseAuth() {
+export async function ensureFirebaseAuth(expectedUserId?: string) {
+  if (
+    firebaseAuth.currentUser &&
+    expectedUserId &&
+    firebaseAuth.currentUser.uid !== expectedUserId
+  ) {
+    await signOut(firebaseAuth);
+    authPromise = null;
+  }
   if (firebaseAuth.currentUser) return firebaseAuth.currentUser;
   if (authPromise) return authPromise;
 
@@ -56,6 +66,16 @@ export async function ensureFirebaseAuth() {
   }
 }
 
+export async function signOutFirebase() {
+  authPromise = null;
+  if (!firebaseAuth.currentUser) return;
+  try {
+    await signOut(firebaseAuth);
+  } catch {
+    // App logout should still complete.
+  }
+}
+
 export async function createConversation(participantUserId: string) {
   const res = await apiFetch<{ success: boolean; data: { conversationId: string } }>(
     '/communication/conversations',
@@ -71,12 +91,19 @@ export async function notifyConversation(
   conversationId: string,
   payload: { content: string; senderName: string },
 ) {
-  await apiFetch(`/communication/conversations/${conversationId}/notify`, {
-    method: 'POST',
-    body: JSON.stringify({
-      conversationId,
-      content: payload.content,
-      senderName: payload.senderName,
-    }),
-  });
+  try {
+    await apiFetch(`/communication/conversations/${conversationId}/notify`, {
+      method: 'POST',
+      body: JSON.stringify({
+        conversationId,
+        content: payload.content,
+        senderName: payload.senderName,
+      }),
+    });
+    recordNotifyResult(true, 'Server accepted chat push for the other person.');
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Chat notify request failed.';
+    recordNotifyResult(false, message);
+    throw err;
+  }
 }

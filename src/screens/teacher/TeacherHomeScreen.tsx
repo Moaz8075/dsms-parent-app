@@ -10,7 +10,6 @@ import { colors, radius, shadow } from '../../theme';
 import { greeting } from '../../utils/format';
 
 const QUICK_ACTIONS = [
-  { key: 'TeacherOtp', label: 'OTP', hint: 'Today’s class code', icon: 'keypad-outline' as const, color: '#0F766E' },
   { key: 'TeacherStudents', label: 'Students', hint: 'Class roll list', icon: 'people-outline' as const, color: '#7C3AED' },
   { key: 'TeacherAttendanceTab', label: 'Attendance', hint: 'Mark class today', icon: 'checkmark-circle-outline' as const, color: '#1F9D6A' },
   { key: 'TeacherDiary', label: 'Diary', hint: 'Notes for parents', icon: 'book-outline' as const, color: '#5C6BC0' },
@@ -58,7 +57,7 @@ export function TeacherHomeScreen({ navigation }: any) {
         ) : null}
 
         <Text style={styles.ctaTitle}>Quick actions</Text>
-        <Text style={styles.ctaHint}>Start with today’s OTP and class list, then attendance and the rest.</Text>
+        <Text style={styles.ctaHint}>Start with the class list and attendance, then diary, tests, and the rest.</Text>
         <View style={styles.grid}>
           {QUICK_ACTIONS.map((action) => {
             const hint =

@@ -25,6 +25,7 @@ import { ExamDetailScreen } from '../screens/ExamDetailScreen';
 import { TeacherNavigator } from './TeacherNavigator';
 import { navigationRef, navigateFromPush } from './navigationRef';
 import { subscribeToNotificationResponse } from '../notifications/push';
+import { useTabBarScreenOptions } from './tabBarOptions';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -42,29 +43,21 @@ const navTheme = {
 };
 
 function Tabs() {
+  const tabOptions = useTabBarScreenOptions();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopColor: colors.border,
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 8,
-        },
-        tabBarLabelStyle: { fontWeight: '700', fontSize: 11 },
-        tabBarIcon: ({ color, size }) => {
+        ...tabOptions,
+        tabBarIcon: ({ color, focused }) => {
           const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
-            HomeTab: 'home-outline',
-            DiaryTab: 'book-outline',
-            AcademicsTab: 'school-outline',
-            ChatTab: 'chatbubbles-outline',
-            MoreTab: 'menu-outline',
+            HomeTab: focused ? 'home' : 'home-outline',
+            DiaryTab: focused ? 'book' : 'book-outline',
+            AcademicsTab: focused ? 'school' : 'school-outline',
+            ChatTab: focused ? 'chatbubbles' : 'chatbubbles-outline',
+            MoreTab: focused ? 'menu' : 'menu-outline',
           };
-          return <Ionicons name={icons[route.name] ?? 'ellipse-outline'} size={size} color={color} />;
+          return <Ionicons name={icons[route.name] ?? 'ellipse-outline'} size={24} color={color} />;
         },
       })}
     >

@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Card } from '../components/Card';
 import { Badge, statusTone } from '../components/Badge';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { Field } from '../components/Field';
+import { KeyboardScreen } from '../components/KeyboardScreen';
 import { EmptyState, ErrorState, LoadingState } from '../components/States';
 import { useAuth } from '../context/AuthContext';
 import { useParentFees, useSubmitPaymentReceipt } from '../hooks/useParentQueries';
@@ -57,12 +58,16 @@ export function FeesScreen({ navigation }: any) {
 
   return (
     <View style={styles.root}>
-      <ScreenHeader
-        title="Fees"
-        subtitle={activeChild ? `${activeChild.name} · ${activeChild.grade}` : undefined}
-        onBack={() => navigation.goBack()}
-      />
-      <ScrollView contentContainerStyle={styles.body}>
+      <KeyboardScreen
+        header={
+          <ScreenHeader
+            title="Fees"
+            subtitle={activeChild ? `${activeChild.name} · ${activeChild.grade}` : undefined}
+            onBack={() => navigation.goBack()}
+          />
+        }
+        contentContainerStyle={styles.body}
+      >
         {isLoading ? <LoadingState /> : null}
         {isError ? <ErrorState message={(error as Error)?.message} onRetry={() => refetch()} /> : null}
 
@@ -128,7 +133,7 @@ export function FeesScreen({ navigation }: any) {
             ))}
           </>
         ) : null}
-      </ScrollView>
+      </KeyboardScreen>
     </View>
   );
 }

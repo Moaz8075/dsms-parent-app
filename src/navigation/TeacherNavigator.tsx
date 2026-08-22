@@ -1,7 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme';
 import { ChatThreadScreen } from '../screens/ChatScreens';
 import { TeacherHomeScreen } from '../screens/teacher/TeacherHomeScreen';
 import { TeacherClassesScreen } from '../screens/teacher/TeacherClassesScreen';
@@ -20,35 +19,27 @@ import { TeacherAnnouncementComposeScreen } from '../screens/teacher/TeacherAnno
 import { TeacherChatListScreen } from '../screens/teacher/TeacherChatListScreen';
 import { TeacherMoreScreen } from '../screens/teacher/TeacherMoreScreen';
 import { TeacherProfileScreen } from '../screens/teacher/TeacherProfileScreen';
-import { TeacherOtpScreen } from '../screens/teacher/TeacherOtpScreen';
+import { useTabBarScreenOptions } from './tabBarOptions';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function TeacherTabs() {
+  const tabOptions = useTabBarScreenOptions();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopColor: colors.border,
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 8,
-        },
-        tabBarLabelStyle: { fontWeight: '700', fontSize: 11 },
-        tabBarIcon: ({ color, size }) => {
+        ...tabOptions,
+        tabBarIcon: ({ color, focused }) => {
           const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
-            TeacherHomeTab: 'home-outline',
-            TeacherClassesTab: 'school-outline',
-            TeacherAttendanceTab: 'checkmark-circle-outline',
-            TeacherChatTab: 'chatbubbles-outline',
-            TeacherMoreTab: 'menu-outline',
+            TeacherHomeTab: focused ? 'home' : 'home-outline',
+            TeacherClassesTab: focused ? 'school' : 'school-outline',
+            TeacherAttendanceTab: focused ? 'checkmark-circle' : 'checkmark-circle-outline',
+            TeacherChatTab: focused ? 'chatbubbles' : 'chatbubbles-outline',
+            TeacherMoreTab: focused ? 'menu' : 'menu-outline',
           };
-          return <Ionicons name={icons[route.name] ?? 'ellipse-outline'} size={size} color={color} />;
+          return <Ionicons name={icons[route.name] ?? 'ellipse-outline'} size={24} color={color} />;
         },
       })}
     >
@@ -77,7 +68,6 @@ export function TeacherNavigator() {
       <Stack.Screen name="TeacherAnnouncements" component={TeacherAnnouncementsScreen} />
       <Stack.Screen name="TeacherAnnouncementCompose" component={TeacherAnnouncementComposeScreen} />
       <Stack.Screen name="TeacherProfile" component={TeacherProfileScreen} />
-      <Stack.Screen name="TeacherOtp" component={TeacherOtpScreen} />
       <Stack.Screen name="ChatThread" component={ChatThreadScreen} />
     </Stack.Navigator>
   );

@@ -1,8 +1,9 @@
+import { useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
 import { isRunningInExpoGo } from 'expo';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
-import { apiFetch } from '../api/client';
+import { API_BASE, apiFetch } from '../api/client';
 
 type NotificationsModule = typeof import('expo-notifications');
 
@@ -58,6 +59,60 @@ const TOKEN_KEY_PLATFORM = Platform.OS === 'ios' ? 'ios' : Platform.OS === 'andr
 
 let registeredToken: string | null = null;
 
+export type PushDebugStatus = {
+  state: 'idle' | 'registering' | 'registered' | 'skipped' | 'failed';
+  detail: string;
+  tokenTail: string | null;
+  apiBase: string;
+  lastNotify: 'idle' | 'ok' | 'failed';
+  lastNotifyDetail: string;
+};
+
+const listeners = new Set<() => void>();
+
+let pushStatus: PushDebugStatus = {
+  state: 'idle',
+  detail: 'Waiting for login…',
+  tokenTail: null,
+  apiBase: API_BASE,
+  lastNotify: 'idle',
+  lastNotifyDetail: 'Send a chat message to test.',
+};
+
+function emitPushStatus() {
+  listeners.forEach((listener) => listener());
+}
+
+function setPushStatus(patch: Partial<PushDebugStatus>) {
+  pushStatus = { ...pushStatus, ...patch, apiBase: API_BASE };
+  emitPushStatus();
+}
+
+export function getPushStatus() {
+  return pushStatus;
+}
+
+export function subscribePushStatus(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+export function usePushStatus() {
+  return useSyncExternalStore(subscribePushStatus, getPushStatus, getPushStatus);
+}
+
+export function recordNotifyResult(ok: boolean, detail: string) {
+  setPushStatus({
+    lastNotify: ok ? 'ok' : 'failed',
+    lastNotifyDetail: detail,
+  });
+}
+
+function tokenTail(token: string) {
+  const inner = token.match(/\[(.+)\]/)?.[1] ?? token;
+  return inner.length <= 12 ? inner : `…${inner.slice(-8)}`;
+}
+
 export type PushPayload = {
   type?: string;
   conversationId?: string;
@@ -97,9 +152,31 @@ export function subscribeToNotificationResponse(
 }
 
 export async function registerPushNotifications() {
+  setPushStatus({
+    state: 'registering',
+    detail: 'Requesting notification permission…',
+    tokenTail: null,
+  });
+
+  if (!canUseRemotePush()) {
+    setPushStatus({
+      state: 'skipped',
+      detail: isRunningInExpoGo()
+        ? 'Expo Go cannot receive Android push. Install the EAS APK.'
+        : 'Push is disabled on this platform.',
+    });
+    return null;
+  }
+
   const Notifications = loadNotifications();
-  if (!Notifications) return null;
-  if (!Device.isDevice) return null;
+  if (!Notifications) {
+    setPushStatus({ state: 'failed', detail: 'Could not load expo-notifications.' });
+    return null;
+  }
+  if (!Device.isDevice) {
+    setPushStatus({ state: 'skipped', detail: 'Push needs a physical device, not a simulator.' });
+    return null;
+  }
 
   try {
     ensureNotificationHandler(Notifications);
@@ -115,29 +192,47 @@ export async function registerPushNotifications() {
     }
 
     const existing = await Notifications.getPermissionsAsync();
-    let status = existing.status;
-    if (status !== 'granted') {
+    let permission = existing.status;
+    if (permission !== 'granted') {
       const requested = await Notifications.requestPermissionsAsync();
-      status = requested.status;
+      permission = requested.status;
     }
-    if (status !== 'granted') return null;
+    if (permission !== 'granted') {
+      setPushStatus({ state: 'skipped', detail: 'Notification permission was denied.' });
+      return null;
+    }
 
     const projectId =
       Constants.expoConfig?.extra?.eas?.projectId ??
       (Constants as { easConfig?: { projectId?: string } }).easConfig?.projectId;
-    if (!projectId) return null;
+    if (!projectId) {
+      setPushStatus({ state: 'failed', detail: 'Missing EAS projectId. Rebuild the app.' });
+      return null;
+    }
 
+    setPushStatus({ detail: 'Fetching Expo push token…' });
     const tokenResponse = await Notifications.getExpoPushTokenAsync({ projectId });
     const token = tokenResponse.data;
-    if (!token) return null;
+    if (!token) {
+      setPushStatus({ state: 'failed', detail: 'Expo did not return a push token.' });
+      return null;
+    }
 
+    setPushStatus({ detail: 'Saving token on the server…' });
     await apiFetch('/communication/fcm-token', {
       method: 'POST',
       body: JSON.stringify({ token, platform: TOKEN_KEY_PLATFORM }),
     });
     registeredToken = token;
+    setPushStatus({
+      state: 'registered',
+      detail: 'Token saved. This phone can receive push.',
+      tokenTail: tokenTail(token),
+    });
     return token;
-  } catch {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Push registration failed.';
+    setPushStatus({ state: 'failed', detail: message, tokenTail: null });
     return null;
   }
 }
@@ -145,6 +240,13 @@ export async function registerPushNotifications() {
 export async function unregisterPushNotifications() {
   const token = registeredToken;
   registeredToken = null;
+  setPushStatus({
+    state: 'idle',
+    detail: 'Signed out. Token cleared on this device.',
+    tokenTail: null,
+    lastNotify: 'idle',
+    lastNotifyDetail: 'Send a chat message to test.',
+  });
   if (!token) return;
   try {
     await apiFetch('/communication/fcm-token/remove', {

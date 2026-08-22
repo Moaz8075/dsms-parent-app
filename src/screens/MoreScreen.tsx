@@ -6,6 +6,7 @@ import { useParentFees } from '../hooks/useParentQueries';
 import { ChildSwitcher } from '../components/ChildSwitcher';
 import { Card } from '../components/Card';
 import { MenuRow } from '../components/MenuRow';
+import { PushStatusCard } from '../components/PushStatusCard';
 import { colors } from '../theme';
 
 export function MoreScreen({ navigation }: any) {
@@ -91,6 +92,8 @@ export function MoreScreen({ navigation }: any) {
             onPress={() => navigation.navigate('Profile')}
           />
         </Card>
+
+        <PushStatusCard />
 
         <Pressable onPress={confirmLogout} style={styles.logout}>
           <Ionicons name="log-out-outline" size={20} color={colors.danger} />

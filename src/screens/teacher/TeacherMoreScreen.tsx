@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { Card } from '../../components/Card';
 import { MenuRow } from '../../components/MenuRow';
+import { PushStatusCard } from '../../components/PushStatusCard';
 import { colors } from '../../theme';
 
 export function TeacherMoreScreen({ navigation }: any) {
@@ -29,13 +30,6 @@ export function TeacherMoreScreen({ navigation }: any) {
       <ScrollView contentContainerStyle={styles.body}>
         <Card>
           <Text style={styles.section}>Classroom</Text>
-          <MenuRow
-            icon="keypad-outline"
-            color="#0F766E"
-            title="Class OTP"
-            subtitle="Today’s code for students"
-            onPress={() => navigation.navigate('TeacherOtp')}
-          />
           <MenuRow
             icon="calendar-outline"
             color={colors.warning}
@@ -78,6 +72,8 @@ export function TeacherMoreScreen({ navigation }: any) {
             onPress={() => navigation.navigate('TeacherProfile')}
           />
         </Card>
+
+        <PushStatusCard />
         <Pressable onPress={confirmLogout} style={styles.logout}>
           <Ionicons name="log-out-outline" size={20} color={colors.danger} />
           <Text style={styles.logoutText}>Logout</Text>
