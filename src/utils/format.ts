@@ -46,6 +46,12 @@ export function isoDate(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+export function parseIsoDate(iso?: string | null) {
+  if (!iso) return new Date();
+  const date = new Date(`${iso}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
 export function isoMonth(date = new Date()) {
   return isoDate(date).slice(0, 7);
 }
@@ -68,6 +74,20 @@ export function addDays(iso: string, days: number) {
   const date = new Date(`${iso}T00:00:00`);
   date.setDate(date.getDate() + days);
   return isoDate(date);
+}
+
+/** Monday–Friday of the upcoming school week (never the current week). */
+export function nextSchoolWeekRange(from = new Date()) {
+  const today = new Date(from);
+  today.setHours(0, 0, 0, 0);
+  const day = today.getDay(); // 0 Sun … 6 Sat
+  const daysUntilMonday = day === 0 ? 1 : day === 1 ? 7 : 8 - day;
+  const monday = addDays(isoDate(today), daysUntilMonday);
+  return { startDate: monday, endDate: addDays(monday, 4) };
+}
+
+export function datesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string) {
+  return aStart <= bEnd && aEnd >= bStart;
 }
 
 export function daysBetween(start: string, end: string) {
