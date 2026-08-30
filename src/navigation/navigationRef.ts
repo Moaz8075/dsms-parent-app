@@ -48,7 +48,7 @@ export function navigateFromPush(payload: PushPayload, isTeacher: boolean) {
       return;
     }
     if (type === 'LEAVE_SUBMITTED' || type === 'LEAVE_REVIEWED') {
-      navigationRef.navigate('Teacher' as never, { screen: 'TeacherTabs', params: { screen: 'TeacherHomeTab' } } as never);
+      navigationRef.navigate('Teacher' as never, { screen: 'TeacherLeave' } as never);
       return;
     }
     navigationRef.navigate('Teacher' as never, { screen: 'TeacherTabs', params: { screen: 'TeacherHomeTab' } } as never);

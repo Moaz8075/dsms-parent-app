@@ -35,7 +35,9 @@ export function HomeScreen({ navigation }: any) {
 
   const attendance = dashboard.data?.stats?.avgAttendance ?? activeChild?.attendance ?? 0;
   const todayDiaryCount =
-    diary.data?.dates?.find((day) => day.date === new Date().toISOString().slice(0, 10))?.items?.length ?? 0;
+    diary.data?.dates
+      ?.find((day) => day.date === new Date().toISOString().slice(0, 10))
+      ?.items?.filter((item) => item.type === 'diary').length ?? 0;
 
   const go = (key: string) => {
     if (key.endsWith('Tab')) navigation.navigate(key);

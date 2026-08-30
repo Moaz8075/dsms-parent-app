@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { updateUserProfile } from '../api/auth';
+import { fetchStaffLeaveRequests, reviewLeaveRequest } from '../api/leave';
 import {
   createTeacherAnnouncement,
   createTeacherDiary,
@@ -201,5 +202,25 @@ export function useTeacherContacts() {
 export function useUpdateTeacherProfile() {
   return useMutation({
     mutationFn: updateUserProfile,
+  });
+}
+
+export function useStaffLeaveRequests(status = 'PENDING') {
+  const { isAuthenticated, isTeacher } = useAuth();
+  return useQuery({
+    queryKey: ['staff-leave-requests', status],
+    queryFn: () => fetchStaffLeaveRequests(status),
+    enabled: isAuthenticated && isTeacher,
+  });
+}
+
+export function useReviewLeaveRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: reviewLeaveRequest,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['staff-leave-requests'] });
+      qc.invalidateQueries({ queryKey: ['teacher-dashboard'] });
+    },
   });
 }

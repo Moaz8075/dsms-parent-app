@@ -17,7 +17,9 @@ export function AnnouncementsScreen({ navigation }: any) {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('All');
 
   const items = useMemo(() => {
-    const list = data?.announcements ?? [];
+    const list = [...(data?.announcements ?? [])].sort((a, b) =>
+      (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''),
+    );
     if (filter === 'All') return list;
     if (filter === 'Events') return list.filter((a) => (a.category || '').toUpperCase() === 'EVENT');
     if (filter === 'Class') return list.filter((a) => ['CLASS', 'EXAM', 'QUIZ'].includes((a.category || '').toUpperCase()));

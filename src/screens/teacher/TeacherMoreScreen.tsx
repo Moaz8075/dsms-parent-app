@@ -62,6 +62,13 @@ export function TeacherMoreScreen({ navigation }: any) {
             title="Announcements"
             onPress={() => navigation.navigate('TeacherAnnouncements')}
           />
+          <MenuRow
+            icon="calendar-outline"
+            color={colors.warning}
+            title="Leave Requests"
+            subtitle="Approve or reject parent requests"
+            onPress={() => navigation.navigate('TeacherLeave')}
+          />
         </Card>
         <Card style={{ marginTop: 16 }}>
           <Text style={styles.section}>Account</Text>

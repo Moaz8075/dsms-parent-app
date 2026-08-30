@@ -16,6 +16,7 @@ const QUICK_ACTIONS = [
   { key: 'TeacherTests', label: 'Tests', hint: 'Create & mark', icon: 'create-outline' as const, color: '#0EA5A4' },
   { key: 'TeacherSchedule', label: 'Schedule', hint: 'Weekly timetable', icon: 'calendar-outline' as const, color: '#E08B2E' },
   { key: 'TeacherAnnouncements', label: 'Announce', hint: 'Notify families', icon: 'megaphone-outline' as const, color: '#DC2626' },
+  { key: 'TeacherLeave', label: 'Leave', hint: 'Review parent requests', icon: 'calendar-outline' as const, color: '#E08B2E' },
   { key: 'TeacherChatTab', label: 'Chat', hint: 'Message parents', icon: 'chatbubbles-outline' as const, color: '#2563EB' },
 ];
 
@@ -162,6 +163,7 @@ function classTone(status?: string) {
 
 function taskPath(type?: string) {
   if (type === 'attendance') return 'TeacherAttendanceTab';
+  if (type === 'leave') return 'TeacherLeave';
   if (type === 'assignments' || type === 'exams' || type === 'results') return 'TeacherTests';
   return 'TeacherMoreTab';
 }

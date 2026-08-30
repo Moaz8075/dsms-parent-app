@@ -20,12 +20,18 @@ export function DiaryScreen({ navigation }: any) {
   const items = useMemo(() => {
     const list: { date: string; item: DiaryItem }[] = [];
     for (const day of data?.dates ?? []) {
-      for (const item of day.items ?? []) list.push({ date: day.date, item });
+      for (const item of day.items ?? []) {
+        if (item.type !== 'diary') continue;
+        list.push({ date: day.date, item });
+      }
     }
     const subjects = ['All', ...new Set(list.map((row) => subjectOf(row.item)).filter(Boolean))];
     const filtered =
       filter === 'All' ? list : list.filter((row) => subjectOf(row.item) === filter);
-    return { list: filtered.reverse(), subjects };
+    return {
+      list: filtered.sort((a, b) => b.date.localeCompare(a.date)),
+      subjects,
+    };
   }, [data, filter]);
 
   return (
@@ -35,7 +41,7 @@ export function DiaryScreen({ navigation }: any) {
           <Text style={styles.title}>Diary</Text>
           <ChildSwitcher compact />
         </View>
-        <Text style={styles.sub}>{activeChild ? `${activeChild.name} · homework & class updates` : 'Homework & class updates'}</Text>
+        <Text style={styles.sub}>{activeChild ? `${activeChild.name} · class diary` : 'Class diary'}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.body}>
@@ -63,7 +69,7 @@ export function DiaryScreen({ navigation }: any) {
               onPress={() => navigation.navigate('DiaryDetail', { date: row.date, item: row.item })}
             >
               <View style={styles.cardTop}>
-                <Badge label={row.item.type} tone={row.item.type === 'assignment' ? 'warning' : 'primary'} />
+                <Badge label="diary" tone="primary" />
                 <Text style={styles.date}>{formatDate(row.date)}</Text>
               </View>
               <Text style={styles.itemTitle}>{row.item.title}</Text>

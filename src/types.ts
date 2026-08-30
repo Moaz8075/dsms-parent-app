@@ -93,6 +93,21 @@ export type LeaveRequest = {
   createdAt: string;
 };
 
+export type TeacherLeaveRequest = {
+  id: string;
+  studentId: string;
+  studentName: string;
+  parentName: string;
+  parentEmail?: string;
+  className: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  status: string;
+  reviewNote?: string | null;
+  createdAt: string;
+};
+
 export type Announcement = {
   id: string;
   title: string;
