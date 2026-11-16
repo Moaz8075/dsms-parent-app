@@ -82,7 +82,11 @@ export async function fetchParentOnboarding() {
     success: boolean;
     data: {
       completed: boolean;
-      steps: { profileComplete: boolean; childrenLinked: boolean };
+      steps: {
+        profileComplete: boolean;
+        childrenLinked: boolean;
+        passwordChanged?: boolean;
+      };
     };
   }>('/auth/parent/onboarding');
   return response.data;
@@ -93,5 +97,27 @@ export async function completeParentOnboarding() {
     success: boolean;
     data: { completed: boolean; onboardingCompletedAt: string };
   }>('/auth/parent/onboarding/complete', { method: 'POST' });
+  return response.data;
+}
+
+export async function changeParentPassword(payload: {
+  currentPassword?: string;
+  newPassword: string;
+}) {
+  const response = await apiFetch<{ success: boolean; data: { passwordChanged: boolean } }>(
+    '/auth/parent/change-password',
+    { method: 'POST', body: JSON.stringify(payload) },
+  );
+  return response.data;
+}
+
+export async function resetParentPassword(email: string) {
+  const response = await apiFetch<{
+    success: boolean;
+    data: { reset: boolean; message?: string; temporaryPassword?: string };
+  }>('/auth/parent/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ email: email.trim().toLowerCase() }),
+  });
   return response.data;
 }

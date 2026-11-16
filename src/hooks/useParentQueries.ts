@@ -15,7 +15,12 @@ import {
   fetchTeachers,
   submitPaymentReceipt,
 } from '../api/parent';
-import { completeParentOnboarding, fetchParentOnboarding, updateParentProfile } from '../api/auth';
+import {
+  changeParentPassword,
+  completeParentOnboarding,
+  fetchParentOnboarding,
+  updateParentProfile,
+} from '../api/auth';
 import { addDays, isoDate } from '../utils/format';
 
 export function useParentChildren() {
@@ -150,5 +155,13 @@ export function useCompleteOnboarding() {
 export function useUpdateParentProfile() {
   return useMutation({
     mutationFn: updateParentProfile,
+  });
+}
+
+export function useChangeParentPassword() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: changeParentPassword,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['parent-onboarding'] }),
   });
 }

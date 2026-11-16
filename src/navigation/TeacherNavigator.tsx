@@ -13,6 +13,7 @@ import { TeacherAttendanceScreen } from '../screens/teacher/TeacherAttendanceScr
 import { TeacherAttendanceSheetScreen } from '../screens/teacher/TeacherAttendanceSheetScreen';
 import { TeacherTestsScreen } from '../screens/teacher/TeacherTestsScreen';
 import { TeacherMarksheetScreen } from '../screens/teacher/TeacherMarksheetScreen';
+import { TeacherEditTestScreen } from '../screens/teacher/TeacherEditTestScreen';
 import { TeacherCreateTestScreen } from '../screens/teacher/TeacherCreateTestScreen';
 import { TeacherAnnouncementsScreen } from '../screens/teacher/TeacherAnnouncementsScreen';
 import { TeacherAnnouncementComposeScreen } from '../screens/teacher/TeacherAnnouncementComposeScreen';
@@ -66,6 +67,7 @@ export function TeacherNavigator() {
       <Stack.Screen name="TeacherTests" component={TeacherTestsScreen} />
       <Stack.Screen name="TeacherMarksheet" component={TeacherMarksheetScreen} />
       <Stack.Screen name="TeacherCreateTest" component={TeacherCreateTestScreen} />
+      <Stack.Screen name="TeacherEditTest" component={TeacherEditTestScreen} />
       <Stack.Screen name="TeacherAnnouncements" component={TeacherAnnouncementsScreen} />
       <Stack.Screen name="TeacherAnnouncementCompose" component={TeacherAnnouncementComposeScreen} />
       <Stack.Screen name="TeacherLeave" component={TeacherLeaveScreen} />

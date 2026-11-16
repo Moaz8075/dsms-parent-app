@@ -1,8 +1,14 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
-import { useCompleteOnboarding, useParentOnboarding } from '../hooks/useParentQueries';
+import {
+  useChangeParentPassword,
+  useCompleteOnboarding,
+  useParentOnboarding,
+} from '../hooks/useParentQueries';
+import { Field } from '../components/Field';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { LoadingState } from '../components/States';
 import { colors, radius } from '../theme';
@@ -11,6 +17,10 @@ export function OnboardingScreen({ navigation }: any) {
   const { user, children, updateUser } = useAuth();
   const { data, isLoading } = useParentOnboarding();
   const complete = useCompleteOnboarding();
+  const changePassword = useChangeParentPassword();
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwError, setPwError] = useState('');
 
   if (isLoading) {
     return (
@@ -20,7 +30,14 @@ export function OnboardingScreen({ navigation }: any) {
     );
   }
 
+  const passwordDone = Boolean(data?.steps?.passwordChanged);
+
   const steps = [
+    {
+      title: 'Set a new password',
+      subtitle: 'Replace the temporary password the school gave you.',
+      done: passwordDone,
+    },
     {
       title: 'Complete your profile',
       subtitle: 'Add your phone number so the school can reach you.',
@@ -36,7 +53,24 @@ export function OnboardingScreen({ navigation }: any) {
     },
   ];
 
+  const savePassword = async () => {
+    setPwError('');
+    if (newPassword.length < 8) return setPwError('Password must be at least 8 characters.');
+    if (newPassword !== confirmPassword) return setPwError('Passwords do not match.');
+    try {
+      await changePassword.mutateAsync({ newPassword });
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      setPwError(err?.message || 'Could not update password.');
+    }
+  };
+
   const finish = async () => {
+    if (!passwordDone) {
+      Alert.alert('Set a password', 'Choose a new password before finishing setup.');
+      return;
+    }
     const result = await complete.mutateAsync();
     updateUser({ onboardingCompletedAt: result.onboardingCompletedAt });
   };
@@ -64,6 +98,15 @@ export function OnboardingScreen({ navigation }: any) {
             </View>
           </View>
         ))}
+
+        {!passwordDone ? (
+          <View style={styles.card2}>
+            {pwError ? <Text style={styles.err}>{pwError}</Text> : null}
+            <Field label="New password" icon="lock-closed-outline" value={newPassword} onChangeText={setNewPassword} secureTextEntry placeholder="At least 8 characters" />
+            <Field label="Confirm password" icon="lock-closed-outline" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry placeholder="Repeat password" />
+            <PrimaryButton title="Save password" loading={changePassword.isPending} onPress={savePassword} />
+          </View>
+        ) : null}
 
         <PrimaryButton
           title="Complete setup"
@@ -98,6 +141,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconDone: { backgroundColor: colors.success },
+  card2: { backgroundColor: colors.white, borderRadius: radius.lg, padding: 16, marginBottom: 16 },
+  err: { color: colors.danger, fontWeight: '600', marginBottom: 10 },
   stepTitle: { fontWeight: '800', color: colors.text, fontSize: 16 },
   stepSub: { color: colors.textMuted, marginTop: 4 },
 });

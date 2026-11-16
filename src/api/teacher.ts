@@ -235,6 +235,26 @@ export async function createTeacherTest(payload: {
   });
 }
 
+export async function updateTeacherTest(
+  examSubjectId: string,
+  payload: {
+    name?: string;
+    examDate?: string;
+    maxMarks?: number;
+    passingMarks?: number;
+    description?: string;
+  },
+) {
+  return unwrap<any>(`${BASE}/tests-and-marks/${examSubjectId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteTeacherTest(examSubjectId: string) {
+  return unwrap<any>(`${BASE}/tests-and-marks/${examSubjectId}`, { method: 'DELETE' });
+}
+
 export async function fetchTeacherMarkSheet(examSubjectId: string) {
   return unwrap<{
     header: {

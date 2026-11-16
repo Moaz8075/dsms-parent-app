@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth, type LoginRole } from '../context/AuthContext';
+import { resetParentPassword } from '../api/auth';
 import { Field } from '../components/Field';
 import { KeyboardScreen } from '../components/KeyboardScreen';
 import { PrimaryButton } from '../components/PrimaryButton';
@@ -121,19 +122,60 @@ export function LoginScreen({ navigation }: any) {
 }
 
 export function ForgotPasswordScreen({ navigation }: any) {
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const submit = async () => {
+    setError('');
+    setMessage('');
+    if (!email.trim()) return setError('Enter your parent account email.');
+    setLoading(true);
+    try {
+      const result = await resetParentPassword(email);
+      setMessage(
+        result.message ||
+          'If a parent account exists for that email, it was reset. Sign in with the temporary password from your school.',
+      );
+    } catch (err: any) {
+      setError(err?.message || 'Could not reset password.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.content}>
+      <KeyboardScreen contentContainerStyle={styles.content}>
         <View style={styles.iconCircle}>
           <Text style={{ fontSize: 28 }}>🔑</Text>
         </View>
         <Text style={styles.heading}>Forgot Password?</Text>
         <Text style={styles.subtitle}>
-          Password reset is managed by your school. Contact the school admin to restore access to your
-          account.
+          Parents: enter your email to reset to the temporary password, then set a new one after
+          signing in. Teachers: contact your school admin.
         </Text>
-        <PrimaryButton title="Back to Login" onPress={() => navigation.goBack()} />
-      </View>
+        {error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : null}
+        {message ? <Text style={styles.okText}>{message}</Text> : null}
+        <Field
+          label="Parent email"
+          icon="mail-outline"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoComplete="email"
+          placeholder="parent@school.com"
+        />
+        <PrimaryButton title="Reset password" onPress={submit} loading={loading} />
+        <Pressable onPress={() => navigation.goBack()} style={styles.forgot}>
+          <Text style={[styles.forgotText, { textAlign: 'center' }]}>Back to Login</Text>
+        </Pressable>
+      </KeyboardScreen>
     </SafeAreaView>
   );
 }
@@ -178,6 +220,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
   },
+  okText: { color: colors.success, fontWeight: '600', marginBottom: 14, textAlign: 'center' },
   errorText: { color: colors.danger, fontWeight: '600' },
   iconCircle: {
     width: 72,

@@ -6,6 +6,8 @@ import {
   createTeacherAnnouncement,
   createTeacherDiary,
   createTeacherTest,
+  deleteTeacherTest,
+  updateTeacherTest,
   fetchAnnouncementOptions,
   fetchCommunicationContacts,
   fetchCreateTestOptions,
@@ -220,6 +222,29 @@ export function useReviewLeaveRequest() {
     mutationFn: reviewLeaveRequest,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['staff-leave-requests'] });
+      qc.invalidateQueries({ queryKey: ['teacher-dashboard'] });
+    },
+  });
+}
+
+export function useUpdateTeacherTest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ examSubjectId, ...payload }: { examSubjectId: string } & Parameters<typeof updateTeacherTest>[1]) =>
+      updateTeacherTest(examSubjectId, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['teacher-tests-and-marks'] });
+      qc.invalidateQueries({ queryKey: ['teacher-dashboard'] });
+    },
+  });
+}
+
+export function useDeleteTeacherTest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteTeacherTest,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['teacher-tests-and-marks'] });
       qc.invalidateQueries({ queryKey: ['teacher-dashboard'] });
     },
   });
