@@ -13,6 +13,7 @@ import {
   fetchLeaveRequests,
   fetchReportCard,
   fetchTeachers,
+  fetchUniversityResults,
   submitPaymentReceipt,
 } from '../api/parent';
 import {
@@ -69,6 +70,14 @@ export function useParentAcademics(childId?: string | null) {
   return useQuery({
     queryKey: ['parent-academics', childId],
     queryFn: () => fetchAcademics(childId as string),
+    enabled: Boolean(childId),
+  });
+}
+
+export function useParentUniversityResults(childId?: string | null) {
+  return useQuery({
+    queryKey: ['parent-university-results', childId],
+    queryFn: () => fetchUniversityResults(childId as string),
     enabled: Boolean(childId),
   });
 }

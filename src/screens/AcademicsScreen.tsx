@@ -2,7 +2,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
-import { useParentAcademics, useParentAttendance } from '../hooks/useParentQueries';
+import { useParentAcademics, useParentAttendance, useParentUniversityResults } from '../hooks/useParentQueries';
 import { ChildSwitcher } from '../components/ChildSwitcher';
 import { Card } from '../components/Card';
 import { MenuRow } from '../components/MenuRow';
@@ -15,6 +15,8 @@ export function AcademicsScreen({ navigation }: any) {
   const { activeChildId, activeChild } = useAuth();
   const academics = useParentAcademics(activeChildId);
   const attendance = useParentAttendance(activeChildId, addDays(isoDate(), -90), isoDate());
+  const uniResults = useParentUniversityResults(activeChildId);
+  const uniCount = uniResults.data?.results.length ?? 0;
   const split = splitAssessments(academics.data?.exams ?? []);
 
   return (
@@ -53,6 +55,15 @@ export function AcademicsScreen({ navigation }: any) {
             subtitle="Official term summary"
             onPress={() => navigation.navigate('ReportCard')}
           />
+          {uniCount > 0 ? (
+            <MenuRow
+              icon="business-outline"
+              color="#0F766E"
+              title="University Results"
+              subtitle={`${uniCount} shared by the school`}
+              onPress={() => navigation.navigate('UniversityResults')}
+            />
+          ) : null}
           <MenuRow
             icon="checkmark-circle-outline"
             color={colors.info}

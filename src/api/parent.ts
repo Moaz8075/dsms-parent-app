@@ -181,3 +181,47 @@ export async function fetchSchedule(childId: string) {
   );
   return response.data;
 }
+
+export type UniversityResultFile = { id: string; fileName: string; mimeType?: string; fileUrl: string };
+export type UniversityResult = {
+  id: string;
+  title: string;
+  semester: number | null;
+  session: string | null;
+  program: string;
+  university: string;
+  registrationNumber: string | null;
+  gpa: number | null;
+  cgpa: number | null;
+  percentage: number | null;
+  resultStatus: 'PASS' | 'FAIL' | 'WITHHELD';
+  declaredOn: string | null;
+  remarks: string | null;
+  courses: {
+    courseCode: string | null;
+    courseName: string;
+    creditHours: number | null;
+    marks: number | null;
+    grade: string | null;
+    gradePoints: number | null;
+  }[];
+  files: UniversityResultFile[];
+};
+
+/** Official results from the university / board that the school has released to parents. */
+export async function fetchUniversityResults(childId: string) {
+  const response = await apiFetch<{
+    success: boolean;
+    data: { childName: string; results: UniversityResult[] };
+  }>(`${BASE}/children/${childId}/university-results`);
+  return response.data;
+}
+
+/** A short-lived link that opens the result file in the phone's browser / PDF viewer. */
+export async function createUniversityResultLink(childId: string, fileId: string) {
+  const response = await apiFetch<{ success: boolean; data: { url: string; expiresInSeconds: number } }>(
+    `${BASE}/children/${childId}/university-results/files/${fileId}/link`,
+    { method: 'POST', body: JSON.stringify({}) },
+  );
+  return response.data;
+}

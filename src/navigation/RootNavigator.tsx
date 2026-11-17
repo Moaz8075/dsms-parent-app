@@ -20,6 +20,7 @@ import { AnnouncementsScreen } from '../screens/AnnouncementsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { AttendanceScreen } from '../screens/AttendanceScreen';
 import { ReportCardScreen } from '../screens/ReportCardScreen';
+import { UniversityResultsScreen } from '../screens/UniversityResultsScreen';
 import { TestsScreen, ExamsScreen } from '../screens/AssessmentListScreen';
 import { ExamDetailScreen } from '../screens/ExamDetailScreen';
 import { TeacherNavigator } from './TeacherNavigator';
@@ -115,6 +116,7 @@ export function RootNavigator() {
             <Stack.Screen name="Profile" component={ProfileScreen} />
             <Stack.Screen name="Attendance" component={AttendanceScreen} />
             <Stack.Screen name="ReportCard" component={ReportCardScreen} />
+            <Stack.Screen name="UniversityResults" component={UniversityResultsScreen} />
             <Stack.Screen name="Tests" component={TestsScreen} />
             <Stack.Screen name="Exams" component={ExamsScreen} />
             <Stack.Screen name="ExamDetail" component={ExamDetailScreen} />
