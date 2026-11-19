@@ -21,6 +21,10 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { AttendanceScreen } from '../screens/AttendanceScreen';
 import { ReportCardScreen } from '../screens/ReportCardScreen';
 import { UniversityResultsScreen } from '../screens/UniversityResultsScreen';
+import { CertificatesScreen } from '../screens/CertificatesScreen';
+import { CoursesScreen } from '../screens/CoursesScreen';
+import { ComplaintsScreen } from '../screens/ComplaintsScreen';
+import { ComplaintDetailScreen } from '../screens/ComplaintDetailScreen';
 import { TestsScreen, ExamsScreen } from '../screens/AssessmentListScreen';
 import { ExamDetailScreen } from '../screens/ExamDetailScreen';
 import { TeacherNavigator } from './TeacherNavigator';
@@ -45,6 +49,7 @@ const navTheme = {
 
 function Tabs() {
   const tabOptions = useTabBarScreenOptions();
+  const { isStudent } = useAuth(); // messaging is parent-only
 
   return (
     <Tab.Navigator
@@ -65,7 +70,7 @@ function Tabs() {
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: 'Home' }} />
       <Tab.Screen name="DiaryTab" component={DiaryScreen} options={{ title: 'Diary' }} />
       <Tab.Screen name="AcademicsTab" component={AcademicsScreen} options={{ title: 'Academics' }} />
-      <Tab.Screen name="ChatTab" component={ChatListScreen} options={{ title: 'Chat' }} />
+      {!isStudent ? <Tab.Screen name="ChatTab" component={ChatListScreen} options={{ title: 'Chat' }} /> : null}
       <Tab.Screen name="MoreTab" component={MoreScreen} options={{ title: 'More' }} />
     </Tab.Navigator>
   );
@@ -117,6 +122,10 @@ export function RootNavigator() {
             <Stack.Screen name="Attendance" component={AttendanceScreen} />
             <Stack.Screen name="ReportCard" component={ReportCardScreen} />
             <Stack.Screen name="UniversityResults" component={UniversityResultsScreen} />
+            <Stack.Screen name="Certificates" component={CertificatesScreen} />
+            <Stack.Screen name="Courses" component={CoursesScreen} />
+            <Stack.Screen name="Complaints" component={ComplaintsScreen} />
+            <Stack.Screen name="ComplaintDetail" component={ComplaintDetailScreen} />
             <Stack.Screen name="Tests" component={TestsScreen} />
             <Stack.Screen name="Exams" component={ExamsScreen} />
             <Stack.Screen name="ExamDetail" component={ExamDetailScreen} />

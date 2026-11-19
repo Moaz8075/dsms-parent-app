@@ -31,6 +31,20 @@ export function TeacherMoreScreen({ navigation }: any) {
         <Card>
           <Text style={styles.section}>Classroom</Text>
           <MenuRow
+            icon="library-outline"
+            color="#7C3AED"
+            title="My Courses"
+            subtitle="Courses you teach"
+            onPress={() => navigation.navigate('Courses')}
+          />
+          <MenuRow
+            icon="checkmark-done-outline"
+            color={colors.success}
+            title="My Attendance"
+            subtitle="Your own attendance record"
+            onPress={() => navigation.navigate('MyAttendance')}
+          />
+          <MenuRow
             icon="calendar-outline"
             color={colors.warning}
             title="My Schedule"
@@ -55,6 +69,13 @@ export function TeacherMoreScreen({ navigation }: any) {
             color="#0EA5A4"
             title="Tests & Marks"
             onPress={() => navigation.navigate('TeacherTests')}
+          />
+          <MenuRow
+            icon="chatbox-ellipses-outline"
+            color="#EA580C"
+            title="Complaints"
+            subtitle="Tell the Principal about a problem"
+            onPress={() => navigation.navigate('Complaints')}
           />
           <MenuRow
             icon="megaphone-outline"

@@ -1,11 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { AuthSchool, AuthSession, AuthUser, ParentChild } from '../types';
 import { getStoredAuth, setStoredAuth } from '../api/client';
-import { parentLogin, teacherLogin } from '../api/auth';
+import { parentLogin, studentLogin, teacherLogin } from '../api/auth';
 import { registerPushNotifications, unregisterPushNotifications } from '../notifications/push';
 import { signOutFirebase } from '../api/firebase';
 
-export type LoginRole = 'parent' | 'teacher';
+export type LoginRole = 'parent' | 'teacher' | 'student';
 
 type AuthContextValue = {
   ready: boolean;
@@ -17,6 +17,7 @@ type AuthContextValue = {
   school: AuthSchool | null;
   isAuthenticated: boolean;
   isTeacher: boolean;
+  isStudent: boolean;
   needsOnboarding: boolean;
   login: (email: string, password: string, options?: { role?: LoginRole; subdomain?: string }) => Promise<void>;
   logout: () => Promise<void>;
@@ -29,6 +30,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function teacherFrom(session: AuthSession | null) {
   return session?.user?.userType === 'TEACHER' || session?.role?.code === 'TEACHER';
+}
+
+function studentFrom(session: AuthSession | null) {
+  return session?.user?.userType === 'STUDENT' || session?.role?.code === 'STUDENT';
 }
 
 function buildSession(data: {
@@ -90,6 +95,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         persist(buildSession(data));
         return;
       }
+      if (role === 'student') {
+        const subdomain = options?.subdomain?.trim();
+        if (!subdomain) throw new Error('Enter your school code to continue.');
+        const data = await studentLogin(email.trim().toLowerCase(), password, subdomain);
+        persist(buildSession(data));
+        return;
+      }
       const data = await parentLogin(email.trim().toLowerCase(), password);
       persist(buildSession(data));
     },
@@ -142,6 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session]);
 
   const isTeacher = teacherFrom(session);
+  const isStudent = studentFrom(session);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -154,14 +167,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       school: session?.school ?? null,
       isAuthenticated: Boolean(session?.token),
       isTeacher,
-      needsOnboarding: Boolean(session?.token && !isTeacher && !session.user?.onboardingCompletedAt),
+      isStudent,
+      needsOnboarding: Boolean(session?.token && !isTeacher && !isStudent && !session.user?.onboardingCompletedAt),
       login,
       logout,
       setActiveChild,
       updateUser,
       syncChildren,
     }),
-    [ready, session, activeChild, isTeacher, login, logout, setActiveChild, updateUser, syncChildren],
+    [ready, session, activeChild, isTeacher, isStudent, login, logout, setActiveChild, updateUser, syncChildren],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

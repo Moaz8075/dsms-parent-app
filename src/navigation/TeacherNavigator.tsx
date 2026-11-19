@@ -19,6 +19,10 @@ import { TeacherAnnouncementsScreen } from '../screens/teacher/TeacherAnnounceme
 import { TeacherAnnouncementComposeScreen } from '../screens/teacher/TeacherAnnouncementComposeScreen';
 import { TeacherChatListScreen } from '../screens/teacher/TeacherChatListScreen';
 import { TeacherLeaveScreen } from '../screens/teacher/TeacherLeaveScreen';
+import { CoursesScreen } from '../screens/CoursesScreen';
+import { TeacherMyAttendanceScreen } from '../screens/teacher/TeacherMyAttendanceScreen';
+import { ComplaintsScreen } from '../screens/ComplaintsScreen';
+import { ComplaintDetailScreen } from '../screens/ComplaintDetailScreen';
 import { TeacherMoreScreen } from '../screens/teacher/TeacherMoreScreen';
 import { TeacherProfileScreen } from '../screens/teacher/TeacherProfileScreen';
 import { useTabBarScreenOptions } from './tabBarOptions';
@@ -71,6 +75,10 @@ export function TeacherNavigator() {
       <Stack.Screen name="TeacherAnnouncements" component={TeacherAnnouncementsScreen} />
       <Stack.Screen name="TeacherAnnouncementCompose" component={TeacherAnnouncementComposeScreen} />
       <Stack.Screen name="TeacherLeave" component={TeacherLeaveScreen} />
+      <Stack.Screen name="Courses" component={CoursesScreen} />
+      <Stack.Screen name="MyAttendance" component={TeacherMyAttendanceScreen} />
+      <Stack.Screen name="Complaints" component={ComplaintsScreen} />
+      <Stack.Screen name="ComplaintDetail" component={ComplaintDetailScreen} />
       <Stack.Screen name="TeacherProfile" component={TeacherProfileScreen} />
       <Stack.Screen name="ChatThread" component={ChatThreadScreen} />
     </Stack.Navigator>

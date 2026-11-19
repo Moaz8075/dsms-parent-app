@@ -10,8 +10,8 @@ import { colors } from '../theme';
 
 export function MoreScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { activeChild, logout } = useAuth();
-  const fees = useParentFees(activeChild?.childId);
+  const { activeChild, logout, isStudent } = useAuth();
+  const fees = useParentFees(isStudent ? null : activeChild?.childId);
   const due = fees.data?.summary?.totalDue ?? 0;
 
   const confirmLogout = () => {
@@ -36,6 +36,8 @@ export function MoreScreen({ navigation }: any) {
       <ScrollView contentContainerStyle={styles.body}>
         <Card>
           <Text style={styles.section}>School services</Text>
+          {!isStudent ? (
+            <>
           <MenuRow
             icon="card-outline"
             color={colors.primary}
@@ -49,6 +51,15 @@ export function MoreScreen({ navigation }: any) {
             color={colors.warning}
             title="Leave Requests"
             onPress={() => navigation.navigate('Leave')}
+          />
+            </>
+          ) : null}
+          <MenuRow
+            icon="chatbox-ellipses-outline"
+            color="#EA580C"
+            title="Complaints"
+            subtitle="Tell the Principal about a problem"
+            onPress={() => navigation.navigate('Complaints')}
           />
           <MenuRow
             icon="megaphone-outline"
@@ -73,6 +84,20 @@ export function MoreScreen({ navigation }: any) {
             color={colors.success}
             title="Report Card"
             onPress={() => navigation.navigate('ReportCard')}
+          />
+          <MenuRow
+            icon="library-outline"
+            color="#7C3AED"
+            title="Courses"
+            subtitle="Courses and teachers"
+            onPress={() => navigation.navigate('Courses')}
+          />
+          <MenuRow
+            icon="ribbon-outline"
+            color="#B45309"
+            title="Certificates"
+            subtitle="Awards and certificates"
+            onPress={() => navigation.navigate('Certificates')}
           />
           <MenuRow
             icon="checkmark-circle-outline"

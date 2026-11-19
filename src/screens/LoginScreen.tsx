@@ -26,6 +26,7 @@ export function LoginScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
 
   const isTeacher = role === 'teacher';
+  const needsSchoolCode = role !== 'parent';
 
   const onSubmit = async () => {
     setError('');
@@ -33,7 +34,7 @@ export function LoginScreen({ navigation }: any) {
       setError('Enter your email and password.');
       return;
     }
-    if (isTeacher && !subdomain.trim()) {
+    if (needsSchoolCode && !subdomain.trim()) {
       setError('Enter your school code.');
       return;
     }
@@ -55,21 +56,29 @@ export function LoginScreen({ navigation }: any) {
           <Text style={styles.subtitle}>
             {isTeacher
               ? 'Mark attendance, share diary notes, and stay in touch with parents.'
-              : 'Stay connected with attendance, diary, fees, and teachers.'}
+              : role === 'student'
+                ? 'See your attendance, tests, results, courses and certificates.'
+                : 'Stay connected with attendance, diary, fees, and teachers.'}
           </Text>
 
           <View style={styles.roleSwitch}>
             <Pressable
               onPress={() => setRole('parent')}
-              style={[styles.roleBtn, !isTeacher && styles.roleBtnActive]}
+              style={[styles.roleBtn, role === 'parent' && styles.roleBtnActive]}
             >
-              <Text style={[styles.roleText, !isTeacher && styles.roleTextActive]}>Parent</Text>
+              <Text style={[styles.roleText, role === 'parent' && styles.roleTextActive]}>Parent</Text>
             </Pressable>
             <Pressable
               onPress={() => setRole('teacher')}
               style={[styles.roleBtn, isTeacher && styles.roleBtnActive]}
             >
               <Text style={[styles.roleText, isTeacher && styles.roleTextActive]}>Teacher</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setRole('student')}
+              style={[styles.roleBtn, role === 'student' && styles.roleBtnActive]}
+            >
+              <Text style={[styles.roleText, role === 'student' && styles.roleTextActive]}>Student</Text>
             </Pressable>
           </View>
 
@@ -79,7 +88,7 @@ export function LoginScreen({ navigation }: any) {
             </View>
           ) : null}
 
-          {isTeacher ? (
+          {needsSchoolCode ? (
             <>
               <Field
                 label="School code"
@@ -100,7 +109,7 @@ export function LoginScreen({ navigation }: any) {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoComplete="email"
-            placeholder={isTeacher ? 'teacher@school.com' : 'parent@school.com'}
+            placeholder={isTeacher ? 'teacher@school.com' : role === 'student' ? 'student@school.com' : 'parent@school.com'}
           />
           <Field
             label="Password"
@@ -154,7 +163,7 @@ export function ForgotPasswordScreen({ navigation }: any) {
         <Text style={styles.heading}>Forgot Password?</Text>
         <Text style={styles.subtitle}>
           Parents: enter your email to reset to the temporary password, then set a new one after
-          signing in. Teachers: contact your school admin.
+          signing in. Teachers and students: contact your school admin.
         </Text>
         {error ? (
           <View style={styles.errorBox}>

@@ -48,6 +48,33 @@ export async function teacherLogin(email: string, password: string, subdomain: s
   };
 }
 
+/** Students sign in with their school code, like teachers; they see only their own record. */
+export async function studentLogin(email: string, password: string, subdomain: string) {
+  const response = await apiFetch<{
+    success: boolean;
+    data: {
+      token: string;
+      user: AuthUser;
+      role: { id: string; name: string; code: string };
+      permissions: string[];
+      school: AuthSchool;
+    };
+  }>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+    subdomain,
+  });
+  const data = response.data;
+  const roleCode = data.role?.code || data.user?.userType;
+  if (roleCode !== 'STUDENT' && data.user?.userType !== 'STUDENT') {
+    throw new Error('This account is not a student account. Choose Parent or Teacher and try again.');
+  }
+  return {
+    ...data,
+    school: { id: data.school?.id, name: data.school?.name, subdomain: data.school?.subdomain || subdomain },
+  };
+}
+
 export async function updateUserProfile(payload: {
   firstName?: string;
   lastName?: string;

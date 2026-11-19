@@ -1,4 +1,6 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { PrimaryButton } from '../components/PrimaryButton';
+import { openFamilyDocument } from '../api/family';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
@@ -23,6 +25,15 @@ export function ReportCardScreen({ navigation }: any) {
       <ScrollView contentContainerStyle={styles.body}>
         {isLoading ? <LoadingState /> : null}
         {isError ? <ErrorState message={(error as Error)?.message} onRetry={() => refetch()} /> : null}
+
+        {activeChildId ? (
+          <View style={{ gap: 8, marginBottom: 16 }}>
+            <PrimaryButton title="Download report card" icon="download-outline"
+              onPress={() => openFamilyDocument(activeChildId, 'report-card').catch((e) => Alert.alert('Could not open', e.message))} />
+            <PrimaryButton title="Exam report" variant="outline" icon="document-text-outline"
+              onPress={() => openFamilyDocument(activeChildId, 'exam-report').catch((e) => Alert.alert('Could not open', e.message))} />
+          </View>
+        ) : null}
 
         {summary ? (
           <Card style={styles.hero}>

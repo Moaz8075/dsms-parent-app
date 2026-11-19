@@ -27,7 +27,8 @@ const QUICK_ACTIONS = [
 
 export function HomeScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { user, activeChild, activeChildId } = useAuth();
+  const { user, activeChild, activeChildId, isStudent } = useAuth();
+  const actions = isStudent ? QUICK_ACTIONS.filter((a) => !['Fees', 'Leave', 'ChatTab'].includes(a.key)) : QUICK_ACTIONS;
   useParentChildren();
   const dashboard = useParentDashboard(activeChildId);
   const announcements = useParentAnnouncements(activeChildId);
@@ -66,7 +67,7 @@ export function HomeScreen({ navigation }: any) {
         <Text style={styles.ctaHint}>The things parents use most — fees, leave, diary, and results.</Text>
 
         <View style={styles.grid}>
-          {QUICK_ACTIONS.map((action) => (
+          {actions.map((action) => (
             <Pressable
               key={action.key}
               onPress={() => go(action.key)}
