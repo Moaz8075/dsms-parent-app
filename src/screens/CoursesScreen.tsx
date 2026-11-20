@@ -14,6 +14,14 @@ export function CoursesScreen({ navigation }: any) {
   const child = useChildCourses(isTeacher ? null : activeChildId);
   const q: any = isTeacher ? mine : child;
   const rows: any[] = q.data ?? [];
+  const university = !isTeacher && activeChild?.track === 'UNIVERSITY';
+  const credits = rows.reduce((n, c) => n + (c.creditHours ?? 0), 0);
+  // University: group by semester so a student sees the whole programme at a glance.
+  const groups: { label: string | null; items: any[] }[] = university
+    ? [...new Set(rows.map((c) => c.semester ?? 0))]
+        .sort((a, b) => a - b)
+        .map((s) => ({ label: s ? `Semester ${s}` : 'Other', items: rows.filter((c) => (c.semester ?? 0) === s) }))
+    : [{ label: null, items: rows }];
 
   return (
     <View style={styles.root}>
@@ -24,20 +32,28 @@ export function CoursesScreen({ navigation }: any) {
         {!q.isLoading && !q.isError && rows.length === 0 ? (
           <EmptyState title="No courses yet" subtitle={isTeacher ? 'Courses assigned to you will appear here.' : 'Courses assigned to the class will appear here.'} />
         ) : null}
-        {rows.map((c) => (
-          <Card key={c.id} style={{ marginBottom: 12 }}>
-            <View style={styles.row}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.title}>{c.courseName}</Text>
-                <Text style={styles.meta}>
-                  {c.courseCode}{c.creditHours ? ` · ${c.creditHours} cr` : ''}
-                  {isTeacher ? ` · ${c.className}` : c.teacherName ? ` · ${c.teacherName}` : ''}
-                </Text>
-                {isTeacher ? <Text style={styles.meta}>{c.students} students{c.programName ? ` · ${c.programName}` : ''}</Text> : null}
+        {university && rows.length > 0 ? (
+          <Text style={styles.summary}>{rows.length} courses · {credits} credit hours</Text>
+        ) : null}
+        {groups.map((g) => (
+          <View key={g.label ?? 'all'}>
+            {g.label ? <Text style={styles.group}>{g.label}</Text> : null}
+          {g.items.map((c) => (
+            <Card key={c.id} style={{ marginBottom: 12 }}>
+              <View style={styles.row}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.title}>{c.courseName}</Text>
+                  <Text style={styles.meta}>
+                    {c.courseCode}{c.creditHours ? ` · ${c.creditHours} cr` : ''}
+                    {isTeacher ? ` · ${c.className}` : c.teacherName ? ` · ${c.teacherName}` : ''}
+                  </Text>
+                  {isTeacher ? <Text style={styles.meta}>{c.students} students{c.programName ? ` · ${c.programName}` : ''}</Text> : null}
+                </View>
+                <Badge label={c.isElective ? 'Elective' : 'Core'} tone={c.isElective ? 'info' : 'muted'} />
               </View>
-              <Badge label={c.isElective ? 'Elective' : 'Core'} tone={c.isElective ? 'info' : 'muted'} />
-            </View>
-          </Card>
+            </Card>
+          ))}
+          </View>
         ))}
       </ScrollView>
     </View>
@@ -50,4 +66,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   title: { fontWeight: '800', color: colors.text, fontSize: 15 },
   meta: { color: colors.textMuted, marginTop: 3, fontSize: 12 },
+  summary: { color: colors.textMuted, fontWeight: '600', marginBottom: 10 },
+  group: { color: colors.primary, fontWeight: '800', marginVertical: 8, textTransform: 'uppercase', fontSize: 12 },
 });

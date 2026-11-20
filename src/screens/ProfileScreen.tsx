@@ -10,8 +10,15 @@ import { useAuth } from '../context/AuthContext';
 import { useUpdateParentProfile } from '../hooks/useParentQueries';
 import { colors, radius } from '../theme';
 import { initials } from '../utils/format';
+import { StudentProfileScreen } from './StudentProfileScreen';
 
-export function ProfileScreen({ navigation }: any) {
+/** Parents get their own profile; students see a student-specific one. */
+export function ProfileScreen(props: any) {
+  const { isStudent } = useAuth();
+  return isStudent ? <StudentProfileScreen {...props} /> : <ParentProfileScreen {...props} />;
+}
+
+function ParentProfileScreen({ navigation }: any) {
   const { user, children, updateUser } = useAuth();
   const mutation = useUpdateParentProfile();
   const [firstName, setFirstName] = useState(user?.firstName ?? '');

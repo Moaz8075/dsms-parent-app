@@ -4,8 +4,13 @@ export type ParentChild = {
   schoolId: string;
   schoolName: string;
   subdomain: string | null;
+  features?: { diary?: boolean };
   grade: string;
   className?: string;
+  /** School class (9th–2nd year) or a university program cohort. */
+  track?: 'SCHOOL' | 'UNIVERSITY';
+  programName?: string | null;
+  semester?: number | null;
   relationship?: string;
   isPrimary?: boolean;
   attendance?: number;
@@ -29,6 +34,8 @@ export type AuthSchool = {
   id: string;
   name: string;
   subdomain: string;
+  /** Per-school module switches set by the platform superadmin. Missing = on. */
+  features?: { diary?: boolean };
 };
 
 export type AuthSession = {
@@ -69,7 +76,13 @@ export type Invoice = {
   remaining: number;
   dueDate: string | null;
   issuedAt: string | null;
-  items: { description: string; amount: number }[];
+  type?: string;
+  period?: string | null;
+  notes?: string | null;
+  subtotal?: number;
+  discount?: number;
+  lateFee?: number;
+  items: { description: string; amount: number; isArrears?: boolean }[];
   payments: {
     id: string;
     amount: number;
@@ -78,6 +91,34 @@ export type Invoice = {
     notes?: string | null;
     receipts: FileAttachment[];
   }[];
+};
+
+export type BankDetails = {
+  bankName: string;
+  accountTitle: string;
+  accountNumber: string;
+  iban: string;
+  branchName: string;
+  branchCode: string;
+  instructions: string;
+};
+
+export type FeesData = {
+  childName: string;
+  schoolName: string;
+  className: string;
+  rollNumber?: string | null;
+  parentName?: string | null;
+  school?: { name: string; address: string; phone: string };
+  bank?: BankDetails;
+  summary: {
+    totalBilled: number;
+    totalPaid: number;
+    totalDue: number;
+    pendingVerification: number;
+    invoiceCount: number;
+  };
+  invoices: Invoice[];
 };
 
 export type LeaveRequest = {

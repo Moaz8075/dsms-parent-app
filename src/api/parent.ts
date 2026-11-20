@@ -1,5 +1,6 @@
 import { apiFetch } from './client';
 import type {
+  FeesData,
   Announcement,
   AttendanceRecord,
   DiaryItem,
@@ -28,6 +29,36 @@ export async function fetchDashboard(childId?: string | null) {
     children: ParentChild[];
     recentUpdates: { id: string; title: string; time: string; child: string; type: string }[];
   };
+}
+
+export type ScheduleSlot = {
+  key: string; dayOfWeek: number; day: string; date?: string; startTime: string; endTime: string; subject: string; className: string; room: string;
+};
+
+export type ScheduleWeek = {
+  className: string;
+  schoolName: string;
+  weekStart?: string;
+  weekEnd?: string;
+  weekLabel?: string;
+  slots: ScheduleSlot[];
+  holidays?: { date: string; name: string }[];
+};
+
+/** weekStart: any date (YYYY-MM-DD) inside the wanted week; omit for this week. */
+export async function fetchSchedule(childId: string, weekStart?: string) {
+  const query = weekStart ? `?weekStart=${weekStart}` : '';
+  const response = await apiFetch<{ success: boolean; data: ScheduleWeek }>(`${BASE}/children/${childId}/schedule${query}`);
+  return response.data;
+}
+
+export interface DatePaper { id: string; examId: string; examName: string; subject: string; className: string | null; date: string | null; dateLabel: string; dayLabel: string | null; maxMarks: number; passingMarks: number | null; upcoming: boolean; mine?: boolean }
+export interface DateSheet { exams: { id: string; name: string; typeLabel: string; startLabel: string | null; endLabel: string | null; papers: DatePaper[] }[] }
+
+/** Published exam date sheet for the child's class (a student's own record works too). */
+export async function fetchDateSheet(childId: string) {
+  const response = await apiFetch<{ success: boolean; data: DateSheet }>(`${BASE}/children/${childId}/date-sheet`);
+  return response.data;
 }
 
 export async function fetchDiary(params: { childId?: string | null; from?: string; to?: string }) {
@@ -140,22 +171,7 @@ export async function fetchTeachers(childId: string) {
 }
 
 export async function fetchFees(childId: string) {
-  const response = await apiFetch<{
-    success: boolean;
-    data: {
-      childName: string;
-      schoolName: string;
-      className: string;
-      summary: {
-        totalBilled: number;
-        totalPaid: number;
-        totalDue: number;
-        pendingVerification: number;
-        invoiceCount: number;
-      };
-      invoices: Invoice[];
-    };
-  }>(`${BASE}/children/${childId}/fees`);
+  const response = await apiFetch<{ success: boolean; data: FeesData }>(`${BASE}/children/${childId}/fees`);
   return response.data;
 }
 
@@ -172,13 +188,6 @@ export async function submitPaymentReceipt(
     method: 'POST',
     body: JSON.stringify(payload),
   });
-  return response.data;
-}
-
-export async function fetchSchedule(childId: string) {
-  const response = await apiFetch<{ success: boolean; data: any }>(
-    `${BASE}/children/${childId}/schedule`,
-  );
   return response.data;
 }
 

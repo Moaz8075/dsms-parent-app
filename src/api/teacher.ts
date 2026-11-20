@@ -27,6 +27,7 @@ export async function fetchTeacherClasses() {
       classId: string;
       subjectId: string;
       grade: string;
+      track?: 'SCHOOL' | 'UNIVERSITY';
       title: string;
       students: number;
       room: string;
@@ -57,6 +58,10 @@ export async function fetchTeacherStudents() {
       avatar: string;
     }[];
   }>(`${BASE}/students`);
+}
+
+export async function fetchTeacherDateSheet() {
+  return unwrap<import('./parent').DateSheet>(`${BASE}/date-sheet`);
 }
 
 export async function fetchTeacherSchedule() {

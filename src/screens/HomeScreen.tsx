@@ -7,12 +7,15 @@ import {
   useParentChildren,
   useParentDashboard,
   useParentDiary,
+  useParentSchedule,
 } from '../hooks/useParentQueries';
 import { ChildSwitcher } from '../components/ChildSwitcher';
 import { Card, SectionTitle } from '../components/Card';
 import { EmptyState, ErrorState } from '../components/States';
 import { colors, radius, shadow } from '../theme';
 import { formatShortDate, greeting } from '../utils/format';
+
+import { FEATURES } from '../features';
 
 const QUICK_ACTIONS = [
   { key: 'Fees', label: 'Pay fees', hint: 'Dues & receipts', icon: 'card-outline' as const, color: '#1A2B6D' },
@@ -23,16 +26,37 @@ const QUICK_ACTIONS = [
   { key: 'Exams', label: 'Exams', hint: 'Mid-term & finals', icon: 'school-outline' as const, color: '#7C3AED' },
   { key: 'ChatTab', label: 'Chat', hint: 'Message teachers', icon: 'chatbubbles-outline' as const, color: '#2563EB' },
   { key: 'ReportCard', label: 'Report card', hint: 'Official term result', icon: 'document-text-outline' as const, color: '#DC2626' },
+  { key: 'UniversityResults', label: 'Results', hint: 'Semester results & GPA', icon: 'ribbon-outline' as const, color: '#DC2626' },
+  { key: 'Schedule', label: 'Timetable', hint: 'Classes by day', icon: 'time-outline' as const, color: '#2563EB' },
+  { key: 'DateSheet', label: 'Date sheet', hint: 'Exam dates', icon: 'calendar-outline' as const, color: '#0D9488' },
+  { key: 'Courses', label: 'Courses', hint: 'Enrolled & teachers', icon: 'library-outline' as const, color: '#7C3AED' },
+  { key: 'Certificates', label: 'Certificates', hint: 'Awards & certificates', icon: 'medal-outline' as const, color: '#B45309' },
+  { key: 'Complaints', label: 'Complaints', hint: 'Tell the school', icon: 'chatbox-ellipses-outline' as const, color: '#EA580C' },
 ];
+
+// What each role sees, in order. Students get their own set; parents keep fees, leave and chat.
+const PARENT_KEYS = ['Fees', 'Leave', 'DiaryTab', 'Attendance', 'Schedule', 'DateSheet', 'Tests', 'Exams', 'ChatTab', 'ReportCard', 'UniversityResults'];
+const STUDENT_SCHOOL_KEYS = ['Schedule', 'DateSheet', 'Attendance', 'Tests', 'Exams', 'ReportCard', 'Courses', 'Certificates', 'Complaints'];
+const STUDENT_UNIVERSITY_KEYS = ['Schedule', 'DateSheet', 'Courses', 'UniversityResults', 'Attendance', 'Exams', 'Tests', 'Certificates', 'Complaints'];
 
 export function HomeScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { user, activeChild, activeChildId, isStudent } = useAuth();
-  const actions = isStudent ? QUICK_ACTIONS.filter((a) => !['Fees', 'Leave', 'ChatTab'].includes(a.key)) : QUICK_ACTIONS;
+  const { user, activeChild, activeChildId, isStudent, diaryEnabled } = useAuth();
+  const isUniversity = activeChild?.track === 'UNIVERSITY';
+  // School children see the report card, university children their semester results.
+  const keys = isStudent ? (isUniversity ? STUDENT_UNIVERSITY_KEYS : STUDENT_SCHOOL_KEYS) : PARENT_KEYS;
+  const actions = keys
+    .map((k) => QUICK_ACTIONS.find((a) => a.key === k))
+    .filter((a): a is (typeof QUICK_ACTIONS)[number] => Boolean(a))
+    .filter((a) => (isUniversity ? a.key !== 'ReportCard' : a.key !== 'UniversityResults'))
+    .filter((a) => FEATURES.fees || a.key !== 'Fees')
+    .filter((a) => diaryEnabled || a.key !== 'DiaryTab');
   useParentChildren();
   const dashboard = useParentDashboard(activeChildId);
   const announcements = useParentAnnouncements(activeChildId);
-  const diary = useParentDiary(activeChildId);
+  const diary = useParentDiary(diaryEnabled && !isStudent ? activeChildId : null);
+  const schedule = useParentSchedule(isStudent ? activeChildId : null);
+  const classesToday = (schedule.data?.slots ?? []).filter((s) => s.dayOfWeek === new Date().getDay()).length;
 
   const attendance = dashboard.data?.stats?.avgAttendance ?? activeChild?.attendance ?? 0;
   const todayDiaryCount =
@@ -41,8 +65,7 @@ export function HomeScreen({ navigation }: any) {
       ?.items?.filter((item) => item.type === 'diary').length ?? 0;
 
   const go = (key: string) => {
-    if (key.endsWith('Tab')) navigation.navigate(key);
-    else navigation.navigate(key);
+    navigation.navigate(key === 'Schedule' && isStudent ? 'ScheduleTab' : key);
   };
 
   return (
@@ -64,7 +87,13 @@ export function HomeScreen({ navigation }: any) {
 
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
         <Text style={styles.ctaTitle}>Quick actions</Text>
-        <Text style={styles.ctaHint}>The things parents use most — fees, leave, diary, and results.</Text>
+        <Text style={styles.ctaHint}>
+          {isStudent
+            ? isUniversity
+              ? 'Your timetable, courses, semester results and records.'
+              : 'Your timetable, tests, results and records.'
+            : `The things parents use most — fees, leave${diaryEnabled ? ', diary' : ''}, and results.`}
+        </Text>
 
         <View style={styles.grid}>
           {actions.map((action) => (
@@ -88,17 +117,25 @@ export function HomeScreen({ navigation }: any) {
 
         <View style={styles.glance}>
           <GlanceChip label="Attendance" value={`${attendance}%`} onPress={() => navigation.navigate('Attendance')} />
-          <GlanceChip
-            label="Today"
-            value={todayDiaryCount ? `${todayDiaryCount} diary` : 'No diary'}
-            onPress={() => navigation.navigate('DiaryTab')}
-          />
+          {isStudent ? (
+            <GlanceChip
+              label="Today"
+              value={classesToday ? `${classesToday} ${classesToday === 1 ? 'class' : 'classes'}` : 'No classes'}
+              onPress={() => navigation.navigate('ScheduleTab')}
+            />
+          ) : diaryEnabled ? (
+            <GlanceChip
+              label="Today"
+              value={todayDiaryCount ? `${todayDiaryCount} diary` : 'No diary'}
+              onPress={() => navigation.navigate('DiaryTab')}
+            />
+          ) : null}
         </View>
 
         <View style={{ marginTop: 8 }}>
           <SectionTitle
             title="Recent updates"
-            action={{ label: 'Diary', onPress: () => navigation.navigate('DiaryTab') }}
+            action={diaryEnabled && !isStudent ? { label: 'Diary', onPress: () => navigation.navigate('DiaryTab') } : undefined}
           />
           <Card>
             {(dashboard.data?.recentUpdates ?? []).length === 0 ? (

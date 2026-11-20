@@ -22,7 +22,7 @@ const QUICK_ACTIONS = [
 
 export function TeacherHomeScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { user, school } = useAuth();
+  const { user, school, diaryEnabled } = useAuth();
   const dashboard = useTeacherDashboard();
   const data = dashboard.data;
   const pending = data?.pendingTasks ?? [];
@@ -58,9 +58,9 @@ export function TeacherHomeScreen({ navigation }: any) {
         ) : null}
 
         <Text style={styles.ctaTitle}>Quick actions</Text>
-        <Text style={styles.ctaHint}>Start with the class list and attendance, then diary, tests, and the rest.</Text>
+        <Text style={styles.ctaHint}>Start with the class list and attendance, then tests and the rest.</Text>
         <View style={styles.grid}>
-          {QUICK_ACTIONS.map((action) => {
+          {QUICK_ACTIONS.filter((a) => diaryEnabled || a.key !== 'TeacherDiary').map((action) => {
             const hint =
               action.key === 'TeacherStudents'
                 ? `${data?.stats?.totalStudents ?? 0} in your classes`

@@ -20,6 +20,7 @@ import {
   fetchTeacherDiary,
   fetchTeacherMarkSheet,
   fetchTeacherSchedule,
+  fetchTeacherDateSheet,
   fetchTeacherStudentAttendance,
   fetchTeacherStudentReportCard,
   fetchTeacherStudents,
@@ -49,6 +50,10 @@ export function useTeacherStudents() {
     queryKey: ['teacher-students'],
     queryFn: fetchTeacherStudents,
   });
+}
+
+export function useTeacherDateSheet() {
+  return useQuery({ queryKey: ['teacher-date-sheet'], queryFn: fetchTeacherDateSheet });
 }
 
 export function useTeacherSchedule() {

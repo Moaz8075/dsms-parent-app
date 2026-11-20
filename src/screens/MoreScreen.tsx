@@ -7,11 +7,12 @@ import { ChildSwitcher } from '../components/ChildSwitcher';
 import { Card } from '../components/Card';
 import { MenuRow } from '../components/MenuRow';
 import { colors } from '../theme';
+import { FEATURES } from '../features';
 
 export function MoreScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const { activeChild, logout, isStudent } = useAuth();
-  const fees = useParentFees(isStudent ? null : activeChild?.childId);
+  const fees = useParentFees(FEATURES.fees && !isStudent ? activeChild?.childId : null);
   const due = fees.data?.summary?.totalDue ?? 0;
 
   const confirmLogout = () => {
@@ -38,14 +39,16 @@ export function MoreScreen({ navigation }: any) {
           <Text style={styles.section}>School services</Text>
           {!isStudent ? (
             <>
-          <MenuRow
-            icon="card-outline"
-            color={colors.primary}
-            title="Fees & Payments"
-            subtitle={due > 0 ? 'Outstanding balance' : 'All caught up'}
-            badge={due > 0 ? 'Due' : undefined}
-            onPress={() => navigation.navigate('Fees')}
-          />
+          {FEATURES.fees ? (
+            <MenuRow
+              icon="card-outline"
+              color={colors.primary}
+              title="Fees & Payments"
+              subtitle={due > 0 ? 'Outstanding balance' : 'All caught up'}
+              badge={due > 0 ? 'Due' : undefined}
+              onPress={() => navigation.navigate('Fees')}
+            />
+          ) : null}
           <MenuRow
             icon="calendar-outline"
             color={colors.warning}
@@ -79,12 +82,31 @@ export function MoreScreen({ navigation }: any) {
             title="Exams"
             onPress={() => navigation.navigate('Exams')}
           />
-          <MenuRow
-            icon="document-text-outline"
-            color={colors.success}
-            title="Report Card"
-            onPress={() => navigation.navigate('ReportCard')}
-          />
+          {activeChild?.track === 'UNIVERSITY' ? (
+            <MenuRow
+              icon="ribbon-outline"
+              color={colors.success}
+              title="University Results"
+              subtitle="Semester results, GPA and CGPA"
+              onPress={() => navigation.navigate('UniversityResults')}
+            />
+          ) : (
+            <MenuRow
+              icon="document-text-outline"
+              color={colors.success}
+              title="Report Card"
+              onPress={() => navigation.navigate('ReportCard')}
+            />
+          )}
+          {!isStudent ? (
+            <MenuRow
+              icon="time-outline"
+              color="#2563EB"
+              title="Timetable"
+              subtitle="Weekly class schedule"
+              onPress={() => navigation.navigate('Schedule')}
+            />
+          ) : null}
           <MenuRow
             icon="library-outline"
             color="#7C3AED"

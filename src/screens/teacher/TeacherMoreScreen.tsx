@@ -9,7 +9,7 @@ import { colors } from '../../theme';
 
 export function TeacherMoreScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { user, school, logout } = useAuth();
+  const { user, school, logout, diaryEnabled } = useAuth();
 
   const confirmLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to sign out?', [
@@ -30,6 +30,13 @@ export function TeacherMoreScreen({ navigation }: any) {
       <ScrollView contentContainerStyle={styles.body}>
         <Card>
           <Text style={styles.section}>Classroom</Text>
+          <MenuRow
+            icon="calendar-outline"
+            color="#0D9488"
+            title="Exam date sheet"
+            subtitle="Exam dates for your classes"
+            onPress={() => navigation.navigate('DateSheet')}
+          />
           <MenuRow
             icon="library-outline"
             color="#7C3AED"
@@ -57,13 +64,15 @@ export function TeacherMoreScreen({ navigation }: any) {
             title="Students"
             onPress={() => navigation.navigate('TeacherStudents')}
           />
-          <MenuRow
-            icon="book-outline"
-            color="#5C6BC0"
-            title="Class Diary"
-            subtitle="Write notes for parents"
-            onPress={() => navigation.navigate('TeacherDiary')}
-          />
+          {diaryEnabled ? (
+            <MenuRow
+              icon="book-outline"
+              color="#5C6BC0"
+              title="Class Diary"
+              subtitle="Write notes for parents"
+              onPress={() => navigation.navigate('TeacherDiary')}
+            />
+          ) : null}
           <MenuRow
             icon="create-outline"
             color="#0EA5A4"

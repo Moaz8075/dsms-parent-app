@@ -8,10 +8,12 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/States';
 import { useTeacherAttendanceClasses } from '../../hooks/useTeacherQueries';
 import { colors, radius } from '../../theme';
 import { addDays, formatDate, isoDate } from '../../utils/format';
+import { DatePickerSheet } from '../../components/DatePickerSheet';
 
 export function TeacherAttendanceScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const [date, setDate] = useState(isoDate());
+  const [pickerOpen, setPickerOpen] = useState(false);
   const { data, isLoading, isError, error, refetch } = useTeacherAttendanceClasses(date);
   const classes = data?.classes ?? [];
 
@@ -24,13 +26,20 @@ export function TeacherAttendanceScreen({ navigation }: any) {
           <Pressable onPress={() => setDate((d) => addDays(d, -1))} style={styles.dateBtn}>
             <Ionicons name="chevron-back" size={18} color={colors.white} />
           </Pressable>
-          <Pressable onPress={() => setDate(isoDate())} style={styles.today}>
-            <Text style={styles.todayText}>{date === isoDate() ? 'Today' : date}</Text>
+          <Pressable onPress={() => setPickerOpen(true)} style={styles.today} accessibilityRole="button" accessibilityLabel="Choose a date">
+            <Ionicons name="calendar-outline" size={16} color={colors.white} />
+            <Text style={styles.todayText}>{date === isoDate() ? 'Today' : formatDate(date)}</Text>
           </Pressable>
           <Pressable onPress={() => setDate((d) => addDays(d, 1))} style={styles.dateBtn}>
             <Ionicons name="chevron-forward" size={18} color={colors.white} />
           </Pressable>
+          {date !== isoDate() ? (
+            <Pressable onPress={() => setDate(isoDate())} style={styles.dateBtn} accessibilityLabel="Back to today">
+              <Text style={styles.todayText}>T</Text>
+            </Pressable>
+          ) : null}
         </View>
+        <DatePickerSheet visible={pickerOpen} value={date} title="Choose a date" onClose={() => setPickerOpen(false)} onPick={(iso) => { setDate(iso); }} />
       </View>
       <ScrollView contentContainerStyle={styles.body}>
         {isLoading ? <LoadingState /> : null}
@@ -80,6 +89,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
   },
   todayText: { color: colors.white, fontWeight: '800' },
   body: { padding: 16, paddingBottom: 40 },

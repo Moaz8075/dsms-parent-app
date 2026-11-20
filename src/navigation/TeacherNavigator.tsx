@@ -1,3 +1,4 @@
+import { DateSheetScreen } from '../screens/DateSheetScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -65,6 +66,7 @@ export function TeacherNavigator() {
       <Stack.Screen name="TeacherStudents" component={TeacherStudentsScreen} />
       <Stack.Screen name="TeacherStudentDetail" component={TeacherStudentDetailScreen} />
       <Stack.Screen name="TeacherSchedule" component={TeacherScheduleScreen} />
+      <Stack.Screen name="DateSheet" component={DateSheetScreen} />
       <Stack.Screen name="TeacherDiary" component={TeacherDiaryScreen} />
       <Stack.Screen name="TeacherDiaryCompose" component={TeacherDiaryComposeScreen} />
       <Stack.Screen name="TeacherAttendanceSheet" component={TeacherAttendanceSheetScreen} />

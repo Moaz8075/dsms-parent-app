@@ -12,6 +12,8 @@ import { useAuth } from '../context/AuthContext';
 import { useParentFees, useSubmitPaymentReceipt } from '../hooks/useParentQueries';
 import { colors } from '../theme';
 import { formatMoney } from '../utils/format';
+import { shareVoucherPdf } from '../utils/voucherPdf';
+import type { Invoice } from '../types';
 
 export function FeesScreen({ navigation }: any) {
   const { activeChildId, activeChild } = useAuth();
@@ -35,6 +37,21 @@ export function FeesScreen({ navigation }: any) {
       size: picked.size,
     });
   };
+
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const download = async (inv: Invoice) => {
+    if (!data) return;
+    setBusyId(inv.id);
+    try {
+      await shareVoucherPdf(data, inv);
+    } catch (err: any) {
+      Alert.alert('Could not create voucher', err?.message || 'Try again.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+  const bank = data?.bank;
+  const hasBank = !!(bank && (bank.bankName || bank.accountNumber || bank.iban));
 
   const upload = async () => {
     if (!current || !file) {
@@ -87,17 +104,60 @@ export function FeesScreen({ navigation }: any) {
             <Text style={styles.section}>Invoice breakdown</Text>
             <Card>
               <Text style={styles.invoiceNo}>{current.invoiceNumber}</Text>
-              {current.items.map((item) => (
-                <View key={item.description} style={styles.itemRow}>
-                  <Text style={styles.itemName}>{item.description}</Text>
-                  <Text style={styles.itemAmt}>{formatMoney(item.amount)}</Text>
+              {current.items.map((item, idx) => (
+                <View key={`${item.description}-${idx}`} style={styles.itemRow}>
+                  <Text style={[styles.itemName, item.isArrears && { color: colors.danger, fontWeight: '700' }]}>{item.description}</Text>
+                  <Text style={[styles.itemAmt, item.isArrears && { color: colors.danger }]}>{formatMoney(item.amount)}</Text>
                 </View>
               ))}
+              {(current.discount ?? 0) > 0 ? (
+                <View style={styles.itemRow}>
+                  <Text style={styles.itemName}>Discount</Text>
+                  <Text style={styles.itemAmt}>- {formatMoney(current.discount)}</Text>
+                </View>
+              ) : null}
+              {(current.lateFee ?? 0) > 0 ? (
+                <View style={styles.itemRow}>
+                  <Text style={styles.itemName}>Late fee</Text>
+                  <Text style={styles.itemAmt}>{formatMoney(current.lateFee)}</Text>
+                </View>
+              ) : null}
+              {current.paidAmount > 0 ? (
+                <View style={styles.itemRow}>
+                  <Text style={styles.itemName}>Already paid</Text>
+                  <Text style={styles.itemAmt}>- {formatMoney(current.paidAmount)}</Text>
+                </View>
+              ) : null}
+              <View style={styles.itemRow}>
+                <Text style={[styles.itemName, { fontWeight: '800' }]}>Payable</Text>
+                <Text style={[styles.itemAmt, { fontWeight: '800' }]}>{formatMoney(current.remaining)}</Text>
+              </View>
+              <View style={{ height: 10 }} />
+              <PrimaryButton
+                title="Download voucher (3 copies)"
+                variant="outline"
+                icon="download-outline"
+                loading={busyId === current.id}
+                onPress={() => download(current)}
+              />
             </Card>
+
+            {hasBank ? (
+              <>
+                <Text style={styles.section}>Deposit in bank</Text>
+                <Card>
+                  {bank?.bankName ? <Text style={styles.itemName}>{bank.bankName}{bank.branchName ? `, ${bank.branchName}` : ''}{bank.branchCode ? ` (${bank.branchCode})` : ''}</Text> : null}
+                  {bank?.accountTitle ? <Text style={styles.help}>Account title: {bank.accountTitle}</Text> : null}
+                  {bank?.accountNumber ? <Text style={styles.help} selectable>Account no.: {bank.accountNumber}</Text> : null}
+                  {bank?.iban ? <Text style={styles.help} selectable>IBAN: {bank.iban}</Text> : null}
+                  {bank?.instructions ? <Text style={styles.help}>{bank.instructions}</Text> : null}
+                </Card>
+              </>
+            ) : null}
 
             <Text style={styles.section}>Upload receipt</Text>
             <Text style={styles.help}>
-              In-app wallets are not enabled yet. Pay via your school’s usual method, then upload the receipt
+              Pay at the bank with the voucher (or pay as your school instructs), then upload the receipt
               for verification — same as the parent web portal.
             </Text>
             <Field label="Notes" value={notes} onChangeText={setNotes} placeholder="Optional note" />
@@ -129,6 +189,15 @@ export function FeesScreen({ navigation }: any) {
                     <Badge label={inv.status} tone={statusTone(inv.status)} />
                   </View>
                 </View>
+                {inv.remaining > 0 && inv.id !== current?.id ? (
+                  <PrimaryButton
+                    title="Download voucher"
+                    variant="outline"
+                    icon="download-outline"
+                    loading={busyId === inv.id}
+                    onPress={() => download(inv)}
+                  />
+                ) : null}
               </Card>
             ))}
           </>

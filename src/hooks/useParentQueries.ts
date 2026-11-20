@@ -12,6 +12,8 @@ import {
   fetchFees,
   fetchLeaveRequests,
   fetchReportCard,
+  fetchSchedule,
+  fetchDateSheet,
   fetchTeachers,
   fetchUniversityResults,
   submitPaymentReceipt,
@@ -172,5 +174,18 @@ export function useChangeParentPassword() {
   return useMutation({
     mutationFn: changeParentPassword,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['parent-onboarding'] }),
+  });
+}
+
+export function useDateSheet(childId?: string | null) {
+  return useQuery({ queryKey: ['date-sheet', childId], queryFn: () => fetchDateSheet(childId as string), enabled: Boolean(childId) });
+}
+
+export function useParentSchedule(childId?: string | null, weekStart?: string) {
+  return useQuery({
+    queryKey: ['parent-schedule', childId, weekStart ?? 'current'],
+    queryFn: () => fetchSchedule(childId as string, weekStart),
+    enabled: Boolean(childId),
+    placeholderData: (prev) => prev,
   });
 }

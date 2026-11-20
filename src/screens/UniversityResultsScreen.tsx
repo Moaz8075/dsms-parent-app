@@ -34,6 +34,9 @@ export function UniversityResultsScreen({ navigation }: any) {
   const { data, isLoading, isError, error, refetch } = useParentUniversityResults(activeChildId);
   const [opening, setOpening] = useState<string | null>(null);
   const results = data?.results ?? [];
+  // Newest semester first; the headline CGPA is the latest one the university has declared.
+  const ordered = [...results].sort((a, b) => (b.semester ?? 0) - (a.semester ?? 0));
+  const latestCgpa = ordered.find((r) => r.cgpa != null)?.cgpa ?? null;
 
   const openFile = async (fileId: string) => {
     if (!activeChildId) return;
@@ -66,7 +69,15 @@ export function UniversityResultsScreen({ navigation }: any) {
           />
         ) : null}
 
-        {results.map((r) => (
+        {latestCgpa != null ? (
+          <Card style={{ marginBottom: 12 }}>
+            <Text style={styles.meta}>Cumulative GPA</Text>
+            <Text style={styles.score}>{latestCgpa}</Text>
+            <Text style={styles.meta}>{results.length} semester result{results.length === 1 ? '' : 's'} shared by the school</Text>
+          </Card>
+        ) : null}
+
+        {ordered.map((r) => (
           <Card key={r.id} style={{ marginBottom: 12 }}>
             <View style={styles.row}>
               <View style={{ flex: 1 }}>

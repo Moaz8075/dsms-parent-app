@@ -1,3 +1,4 @@
+import { FEATURES } from '../features';
 import { createNavigationContainerRef } from '@react-navigation/native';
 import type { PushPayload } from '../notifications/push';
 
@@ -67,8 +68,8 @@ export function navigateFromPush(payload: PushPayload, isTeacher: boolean) {
     navigationRef.navigate('Tabs' as never, { screen: 'DiaryTab' } as never);
     return;
   }
-  if (type === 'PAYMENT_RECEIPT') {
-    navigationRef.navigate('Fees' as never);
+  if (type === 'PAYMENT_RECEIPT' || type === 'FEE_VOUCHER') {
+    if (FEATURES.fees) navigationRef.navigate('Fees' as never);
     return;
   }
   if (type === 'ATTENDANCE_ALERT' || type === 'ATTENDANCE') {

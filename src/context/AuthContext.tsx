@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { AuthSchool, AuthSession, AuthUser, ParentChild } from '../types';
-import { getStoredAuth, setStoredAuth } from '../api/client';
+import { apiFetch, getStoredAuth, setStoredAuth } from '../api/client';
 import { parentLogin, studentLogin, teacherLogin } from '../api/auth';
 import { registerPushNotifications, unregisterPushNotifications } from '../notifications/push';
 import { signOutFirebase } from '../api/firebase';
@@ -18,6 +18,8 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   isTeacher: boolean;
   isStudent: boolean;
+  /** False when the school's superadmin switched the Diary module off. */
+  diaryEnabled: boolean;
   needsOnboarding: boolean;
   login: (email: string, password: string, options?: { role?: LoginRole; subdomain?: string }) => Promise<void>;
   logout: () => Promise<void>;
@@ -155,6 +157,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isTeacher = teacherFrom(session);
   const isStudent = studentFrom(session);
+  const diaryEnabled = (isTeacher ? session?.school?.features : activeChild?.features)?.diary !== false;
+
+  // Teachers have no children list to carry the switches, so pick up changes from /auth/me.
+  useEffect(() => {
+    if (!session?.token || !isTeacher) return;
+    apiFetch<{ data: { features?: { diary?: boolean } } }>('/auth/me')
+      .then((res) => {
+        const features = res.data?.features;
+        if (!features) return;
+        setSession((prev) => {
+          if (!prev?.school || JSON.stringify(prev.school.features) === JSON.stringify(features)) return prev;
+          const next = { ...prev, school: { ...prev.school, features } };
+          void setStoredAuth(next);
+          return next;
+        });
+      })
+      .catch(() => {});
+  }, [session?.token, isTeacher]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -168,6 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: Boolean(session?.token),
       isTeacher,
       isStudent,
+      diaryEnabled,
       needsOnboarding: Boolean(session?.token && !isTeacher && !isStudent && !session.user?.onboardingCompletedAt),
       login,
       logout,
@@ -175,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updateUser,
       syncChildren,
     }),
-    [ready, session, activeChild, isTeacher, isStudent, login, logout, setActiveChild, updateUser, syncChildren],
+    [ready, session, activeChild, isTeacher, isStudent, diaryEnabled, login, logout, setActiveChild, updateUser, syncChildren],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

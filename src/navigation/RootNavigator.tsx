@@ -23,6 +23,8 @@ import { ReportCardScreen } from '../screens/ReportCardScreen';
 import { UniversityResultsScreen } from '../screens/UniversityResultsScreen';
 import { CertificatesScreen } from '../screens/CertificatesScreen';
 import { CoursesScreen } from '../screens/CoursesScreen';
+import { ScheduleScreen } from '../screens/ScheduleScreen';
+import { DateSheetScreen } from '../screens/DateSheetScreen';
 import { ComplaintsScreen } from '../screens/ComplaintsScreen';
 import { ComplaintDetailScreen } from '../screens/ComplaintDetailScreen';
 import { TestsScreen, ExamsScreen } from '../screens/AssessmentListScreen';
@@ -49,7 +51,7 @@ const navTheme = {
 
 function Tabs() {
   const tabOptions = useTabBarScreenOptions();
-  const { isStudent } = useAuth(); // messaging is parent-only
+  const { isStudent, diaryEnabled } = useAuth(); // messaging is parent-only; diary can be switched off per school
 
   return (
     <Tab.Navigator
@@ -59,6 +61,7 @@ function Tabs() {
           const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
             HomeTab: focused ? 'home' : 'home-outline',
             DiaryTab: focused ? 'book' : 'book-outline',
+            ScheduleTab: focused ? 'time' : 'time-outline',
             AcademicsTab: focused ? 'school' : 'school-outline',
             ChatTab: focused ? 'chatbubbles' : 'chatbubbles-outline',
             MoreTab: focused ? 'menu' : 'menu-outline',
@@ -68,7 +71,11 @@ function Tabs() {
       })}
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: 'Home' }} />
-      <Tab.Screen name="DiaryTab" component={DiaryScreen} options={{ title: 'Diary' }} />
+      {isStudent ? (
+        <Tab.Screen name="ScheduleTab" component={ScheduleScreen} options={{ title: 'Timetable' }} />
+      ) : diaryEnabled ? (
+        <Tab.Screen name="DiaryTab" component={DiaryScreen} options={{ title: 'Diary' }} />
+      ) : null}
       <Tab.Screen name="AcademicsTab" component={AcademicsScreen} options={{ title: 'Academics' }} />
       {!isStudent ? <Tab.Screen name="ChatTab" component={ChatListScreen} options={{ title: 'Chat' }} /> : null}
       <Tab.Screen name="MoreTab" component={MoreScreen} options={{ title: 'More' }} />
@@ -124,6 +131,8 @@ export function RootNavigator() {
             <Stack.Screen name="UniversityResults" component={UniversityResultsScreen} />
             <Stack.Screen name="Certificates" component={CertificatesScreen} />
             <Stack.Screen name="Courses" component={CoursesScreen} />
+            <Stack.Screen name="Schedule" component={ScheduleScreen} />
+            <Stack.Screen name="DateSheet" component={DateSheetScreen} />
             <Stack.Screen name="Complaints" component={ComplaintsScreen} />
             <Stack.Screen name="ComplaintDetail" component={ComplaintDetailScreen} />
             <Stack.Screen name="Tests" component={TestsScreen} />

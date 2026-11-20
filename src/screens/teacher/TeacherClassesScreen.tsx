@@ -43,6 +43,7 @@ export function TeacherClassesScreen({ navigation }: any) {
                 </View>
               </View>
               <Text style={styles.subject}>{item.title}</Text>
+              {item.track === 'UNIVERSITY' ? <Text style={styles.meta}>University program</Text> : null}
               <Text style={styles.meta}>
                 {item.room || 'Room TBA'}
                 {item.nextSession?.when ? ` · Next: ${item.nextSession.when}` : ''}
